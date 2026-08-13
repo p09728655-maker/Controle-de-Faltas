@@ -1,5 +1,5 @@
 /* Service worker — cache para uso offline (app + bibliotecas do CDN) */
-const CACHE = 'faltas-patrimar-v1';
+const CACHE = 'faltas-patrimar-v2';
 const ARQUIVOS = [
   './',
   './index.html',

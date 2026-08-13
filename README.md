@@ -17,8 +17,17 @@ Lê a planilha `CONTROLE_FALTAS_2026.xlsx` direto no navegador — **nenhum dado
 
 1. Abrir o painel
 2. Clicar ou arrastar o `CONTROLE_FALTAS_2026.xlsx`
-3. Filtrar por mês, departamento, setor e status
-4. Botão **🔒 Ocultar nomes** antes de projetar (LGPD) · **🖨 Imprimir relatório** para o A4
+3. A caixa **"O que este painel está dizendo"** resume o período em uma frase
+4. Navegar pelas seções fixas no topo: **Resumo · Quando · Onde · Quem · Por quê · Rotatividade · Detalhe**
+5. Filtrar por período (chips), mês, departamento, setor, ocorrência ou busca livre — os filtros ativos viram tags removíveis
+
+Botões do topo:
+
+- **📤 Faltas do dia** — resumo gerencial do dia pronto para enviar por WhatsApp ou e-mail (ou copiar)
+- **Nomes ocultos** — nomes mascarados por padrão (LGPD); clique para mostrar
+- **Imprimir relatório** — relatório A4 em fundo claro com KPIs e tabelas
+- **Exportar CSV** — registros filtrados em CSV (abre no Excel)
+- **Trocar arquivo** — carregar outra versão da planilha
 
 Abas lidas da planilha: `BASE`, `HORAS CARGA`, `TURNOVER`.
 
