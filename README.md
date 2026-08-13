@@ -24,7 +24,7 @@ Lê a planilha `CONTROLE_FALTAS_2026.xlsx` direto no navegador — **nenhum dado
 
 Botões do topo:
 
-- **📤 Faltas do dia** — resumo gerencial do dia pronto para enviar por WhatsApp ou e-mail (ou copiar)
+- **📤 Faltas do dia** — resumo gerencial do dia pronto para enviar por WhatsApp ou e-mail (ou copiar), com prévia igual à mensagem que chega no celular. Na aba **Hoje** o botão **💬 Enviar no WhatsApp** abre o WhatsApp direto com o resumo do dia escrito
 - **Nomes ocultos** — nomes mascarados por padrão (LGPD); clique para mostrar
 - **Imprimir relatório** — relatório A4 em fundo claro com KPIs e tabelas
 - **Exportar CSV** — registros filtrados em CSV (abre no Excel)

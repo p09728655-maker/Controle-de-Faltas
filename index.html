@@ -76,7 +76,12 @@ button{font-family:inherit}
 .md-linha .campo{flex:0 0 160px}
 .md-check{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink2);cursor:pointer;padding-bottom:8px}
 .md-check input{accent-color:var(--amber);width:15px;height:15px;cursor:pointer}
-.md-prev{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.55;color:var(--ink);white-space:pre-wrap;overflow-y:auto;flex:1;min-height:120px;max-height:46vh}
+/* a prévia imita a tela do WhatsApp: o que se vê aqui é o que chega no celular */
+.md-prev{background:#0b141a;border:1px solid var(--line);border-radius:10px;padding:14px;font-size:13px;color:var(--ink3);overflow-y:auto;flex:1;min-height:120px;max-height:46vh}
+.zap-bolha{background:#005c4b;color:#e9edef;border-radius:10px 4px 10px 10px;padding:10px 12px 8px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word;box-shadow:0 1px 2px rgba(0,0,0,.35)}
+.zap-bolha b{color:#fff;font-weight:700}
+.zap-bolha i{color:rgba(233,237,239,.82)}
+.zap-hora{display:block;text-align:right;font-size:10.5px;color:rgba(233,237,239,.6);margin-top:6px}
 .md-acoes{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 .md-btn{flex:1;min-width:130px;border:none;border-radius:8px;padding:10px 14px;font-size:13.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px}
 .md-zap{background:#1DAA61;color:#fff}
@@ -180,6 +185,8 @@ select option{background:#1f2328;color:#f2f4f5}
 .card-cab .mini{margin-left:auto;display:flex;gap:5px}
 .mini button{background:var(--surf2);border:1px solid var(--line);color:var(--ink3);border-radius:6px;padding:3px 9px;font-size:11.5px;font-weight:600;cursor:pointer}
 .mini button.sel{background:rgba(245,166,35,.15);border-color:var(--amber);color:var(--amber)}
+.mini button.zap{background:rgba(29,170,97,.16);border-color:rgba(29,170,97,.55);color:#3ddc84}
+.mini button.zap:hover{background:rgba(29,170,97,.3);color:#fff}
 .graf{position:relative}
 .h210{height:230px}
 .h260{height:280px}
@@ -465,7 +472,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
       <span class="ponto" style="background:var(--red)"></span><span class="card-tit">Resumo do dia por setor</span>
       <div class="mini">
         <button id="btnImprimirSetor" title="Imprime só as quantidades por setor — sem nomes, pode circular fora do DP">🖨 Por setor (sem nomes)</button>
-        <button id="btnEnviarHoje2" title="Abre o resumo deste dia para enviar por WhatsApp, e-mail ou imprimir">📤 Enviar este dia</button>
+        <button id="btnZapHoje" class="zap" title="Abre o WhatsApp já com o resumo deste dia pronto para enviar — usa os nomes como estão na tela (LGPD)">💬 Enviar no WhatsApp</button>
       </div>
     </div>
     <div class="card-sub" id="hojeSetorSub">—</div>
@@ -617,7 +624,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.7.0';
+const VERSAO = '2.8.0';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -1473,10 +1480,9 @@ const DIAS_CURTO = ['dom','seg','ter','qua','qui','sex','sáb'];
 const ORDEM_STATUS = ['FALTA','ATESTADO','ATRASO','AFASTADO','JUST.','BANCO H.','FÉRIAS','FERIAS'];
 const EMOJI_STATUS = {'FALTA':'❌','ATESTADO':'🏥','ATRASO':'⏰','AFASTADO':'🚑','FÉRIAS':'🏖️','FERIAS':'🏖️','JUST.':'📄','BANCO H.':'🕐'};
 
-function mascararDia(nome){
-  if($('mdNomes').checked) return nome;
-  return nome.split(' ').map((p,i)=>i===0?p:(p[0]||'')+'***').join(' ');
-}
+const mascararNome = (nome, mostrar)=> mostrar ? nome
+  : String(nome).split(' ').map((p,i)=>i===0?p:(p[0]||'')+'***').join(' ');
+function mascararDia(nome){ return mascararNome(nome, $('mdNomes').checked); }
 /* CAIXA ALTA → Maiúsculas E Minúsculas (mais leve de ler no celular) */
 const SIGLAS = {'inss':'INSS','dp':'DP','rh':'RH','cid':'CID','tst':'TST'};
 function tCase(s){
@@ -1493,43 +1499,78 @@ const cmpDia = (a,b)=>{
   return sa===sb ? a.nome.localeCompare(b.nome,'pt-BR') : sa.localeCompare(sb,'pt-BR');
 };
 
-function textoDia(iso){
+/* linha divisória: o "━" repetido fecha uma faixa cheia na largura do celular */
+const LINHA_ZAP = '━━━━━━━━━━━━━━';
+
+/* Resumo do dia no formato WhatsApp. A ordem é a da leitura de gestão no celular:
+   cabeçalho → panorama em três linhas → o que exige ação → o que é programado →
+   peso de cada setor → absenteísmo do mês → marcação de confidencialidade. */
+function textoDia(iso, comNomes){
   const doDia = D.registros.filter(r=>r.data===iso);
   const d = new Date(iso+'T12:00:00');
-  let txt = '*FALTAS DO DIA* — '+DIAS_CURTO[d.getDay()]+', '+dataBR(iso)+'\n'+
-            '_Patrimar Móveis · Depto. Pessoal_\n'+
-            '🔒 _Confidencial — uso interno_\n';
-  if(!doDia.length)
-    return txt+'\n✅ Nenhuma ocorrência registrada nesta data.\n\n_Gerado pelo painel Faltas e Ausências · Confidencial — uso interno_';
+  const diaSemana = tCase(d.toLocaleDateString('pt-BR',{weekday:'long'}));
 
-  /* agrupa por tipo de ocorrência */
-  const porStatus={};
-  doDia.forEach(r=>{ (porStatus[r.status]=porStatus[r.status]||[]).push(r); });
+  const cab = '🔴 *FALTAS DO DIA*\n'+
+              '📅 '+diaSemana+', '+dataBR(iso)+'\n'+
+              '🏭 Patrimar Móveis · Depto. Pessoal\n';
+  const rodape = '\n'+LINHA_ZAP+'\n'+
+                 '🔒 _Confidencial — uso interno. Não divulgar._'+
+                 (comNomes ? '' : '\n_Nomes abreviados (LGPD)._')+
+                 '\n_Painel Faltas e Ausências_';
+
+  if(!doDia.length)
+    return cab+LINHA_ZAP+'\n✅ *Nenhuma ocorrência registrada nesta data.*\n'+rodape;
+
+  /* agrupa por tipo de ocorrência e conta por setor */
+  const porStatus={}, porSetor={};
+  doDia.forEach(r=>{
+    (porStatus[r.status]=porStatus[r.status]||[]).push(r);
+    const s=limparSetor(r.setor); porSetor[s]=(porSetor[s]||0)+1;
+  });
   const ordem=[...ORDEM_STATUS.filter(s=>porStatus[s]),
                ...Object.keys(porStatus).filter(s=>!ORDEM_STATUS.includes(s)).sort()];
+  const acao = ordem.filter(s=>!PROGRAMADO.includes(s));
+  const prog = ordem.filter(s=>PROGRAMADO.includes(s));
+  const somar = L=>L.reduce((t,s)=>t+porStatus[s].length,0);
+  const pessoas = new Set(doDia.map(r=>r.nome)).size;
+  const setoresDia = Object.keys(porSetor).sort((a,b)=>porSetor[b]-porSetor[a] || a.localeCompare(b,'pt-BR'));
 
-  txt+='\n*'+doDia.length+' ocorrências:* '+
-    ordem.map(s=>(EMOJI_STATUS[s]||'▪')+' '+tCase(s)+' '+porStatus[s].length).join('  ·  ')+'\n';
+  let txt = cab+LINHA_ZAP+'\n'+
+    '👥 *'+pessoas+'* ausente'+(pessoas>1?'s':'')+' · 🏭 '+setoresDia.length+
+      ' setor'+(setoresDia.length>1?'es':'')+'\n'+
+    '⚠️ *'+somar(acao)+'* exige'+(somar(acao)>1?'m':'')+' ação · 🗓️ *'+somar(prog)+'* programado\n'+
+    ordem.map(s=>(EMOJI_STATUS[s]||'▪')+' '+tCase(s)+' *'+porStatus[s].length+'*').join(' · ')+'\n';
 
-  ordem.forEach(s=>{
-    txt+='\n'+(EMOJI_STATUS[s]||'▪')+' *'+s+'* ('+porStatus[s].length+')\n';
-    porStatus[s].sort(cmpDia).forEach(r=>{
-      const motivo = r.motivo && s!=='FÉRIAS' && s!=='FERIAS' ? ' — _'+tCase(r.motivo)+'_' : '';
-      txt+='• '+tCase(mascararDia(r.nome))+' · '+limparSetor(r.setor)+motivo+'\n';
+  /* um bloco por tipo de ocorrência, nome e setor na mesma linha para não esticar a leitura */
+  const bloco = s=>{
+    let b='\n'+(EMOJI_STATUS[s]||'▪')+' *'+s+'* · '+porStatus[s].length+'\n';
+    porStatus[s].slice().sort(cmpDia).forEach(r=>{
+      const motivo = r.motivo && s!=='FÉRIAS' && s!=='FERIAS' ? ' · _'+tCase(r.motivo)+'_' : '';
+      b+='• '+tCase(mascararNome(r.nome, comNomes))+' — '+limparSetor(r.setor)+motivo+'\n';
     });
-  });
+    return b;
+  };
+  if(acao.length) txt += '\n'+LINHA_ZAP+'\n⚠️ *EXIGEM AÇÃO*\n'+acao.map(bloco).join('');
+  if(prog.length) txt += '\n'+LINHA_ZAP+'\n🗓️ *PROGRAMADO*\n'+prog.map(bloco).join('');
+
+  /* fechamento: quanto cada setor pesou no dia */
+  txt += '\n'+LINHA_ZAP+'\n🏭 *POR SETOR*\n'+
+    setoresDia.map(s=>s+' *'+porSetor[s]+'*').join(' · ')+'\n';
 
   /* absenteísmo do mês do dia */
   const mes = d.getMonth()+1;
-  const Rmes = D.registros.filter(r=>mesDe(r)===mes);
-  const hrsMesTot = Rmes.reduce((s,r)=>s+hDe(r),0);
+  const hrsMesTot = D.registros.filter(r=>mesDe(r)===mes).reduce((s,r)=>s+hDe(r),0);
   const cargaMesTot = setores.reduce((s,st)=>s+cargaPeriodo(st,[mes]),0);
   if(cargaMesTot>0){
     const a=hrsMesTot/cargaMesTot;
-    txt+='\nAbsenteísmo de '+MESES_LONGO[mes-1]+': *'+pct(a)+'* (meta 3%) — '+rotAbs(classeAbs(a));
+    txt+='\n📉 Absenteísmo de '+MESES_LONGO[mes-1]+': *'+pct(a)+'* (meta 3%) — '+rotAbs(classeAbs(a))+'\n';
   }
-  txt+='\n\n_Gerado pelo painel Faltas e Ausências · Confidencial — uso interno_';
-  return txt;
+  return txt+rodape;
+}
+
+/* abre o WhatsApp já com o texto do dia — celular abre o app, computador abre o WhatsApp Web */
+function enviarZap(txt){
+  window.open('https://wa.me/?text='+encodeURIComponent(txt), '_blank');
 }
 
 /* relatório A4 de um dia específico */
@@ -1637,9 +1678,20 @@ function montarRelatorioSetorDia(iso){
       'Patrimar Móveis Ltda · Controle de Faltas e Ausências · '+esc($('topoArq').textContent)+'</div>';
 }
 
+/* o texto cru (com a marcação do WhatsApp) é o que sai no envio;
+   a prévia mostra a mesma coisa já formatada, como chega no celular */
+let textoDiaAtual = '';
+const zapHtml = t => esc(t)
+  .replace(/\*([^*\n]+)\*/g, '<b>$1</b>')
+  .replace(/_([^_\n]+)_/g, '<i>$1</i>');
+
 function atualizarPrevDia(){
   const iso=$('mdData').value;
-  $('mdPrev').textContent = iso ? textoDia(iso) : 'Escolha uma data.';
+  if(!iso){ textoDiaAtual=''; $('mdPrev').textContent='Escolha uma data.'; return; }
+  textoDiaAtual = textoDia(iso, $('mdNomes').checked);
+  const hora = new Date().toLocaleTimeString('pt-BR').slice(0,5);
+  $('mdPrev').innerHTML = '<div class="zap-bolha">'+zapHtml(textoDiaAtual)+
+    '<span class="zap-hora">'+hora+' ✓✓</span></div>';
 }
 function abrirModalDia(){
   if(!D) return;
@@ -1657,16 +1709,17 @@ $('modalDia').addEventListener('click', e=>{ if(e.target.id==='modalDia') $('mod
 $('mdData').addEventListener('change', atualizarPrevDia);
 $('mdNomes').addEventListener('change', atualizarPrevDia);
 $('mdZap').addEventListener('click', ()=>{
-  window.open('https://wa.me/?text='+encodeURIComponent($('mdPrev').textContent), '_blank');
+  if(textoDiaAtual) enviarZap(textoDiaAtual);
 });
 $('mdMail').addEventListener('click', ()=>{
   const iso=$('mdData').value;
+  if(!iso) return;
   const assunto='[CONFIDENCIAL — uso interno] Faltas do dia '+dataBR(iso)+' — Patrimar Móveis';
-  const corpo=$('mdPrev').textContent.replace(/[*_]/g,'');   /* e-mail sem a marcação do WhatsApp */
+  const corpo=textoDiaAtual.replace(/[*_]/g,'');   /* e-mail sem a marcação do WhatsApp */
   location.href='mailto:?subject='+encodeURIComponent(assunto)+'&body='+encodeURIComponent(corpo);
 });
 $('mdCopiar').addEventListener('click', ()=>{
-  navigator.clipboard.writeText($('mdPrev').textContent).then(()=>{
+  navigator.clipboard.writeText(textoDiaAtual).then(()=>{
     $('mdCopiar').textContent='✓ Copiado!';
     setTimeout(()=>{ $('mdCopiar').textContent='Copiar texto'; }, 1600);
   });
@@ -1744,9 +1797,13 @@ function iniciar(){
       });
     });
 
-    $('btnEnviarHoje2').addEventListener('click', ()=>{
-      if(diaCardHoje) $('mdData').value = diaCardHoje;
-      abrirModalDia();
+    $('btnZapHoje').addEventListener('click', ()=>{
+      if(!diaCardHoje) return;
+      /* segue os nomes como estão na tela: com o topo em "Nomes ocultos", o texto vai abreviado */
+      enviarZap(textoDia(diaCardHoje, !lgpd));
+      const b=$('btnZapHoje'), rot=b.textContent;
+      b.textContent='💬 Abrindo o WhatsApp…';
+      setTimeout(()=>{ b.textContent=rot; }, 2200);
     });
     $('btnImprimirSetor').addEventListener('click', ()=>{
       if(!diaCardHoje) return;

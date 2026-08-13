@@ -15,6 +15,16 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.8.0 — 13/08/2026
+
+Envio direto pelo WhatsApp na aba **Hoje**, com o texto redesenhado.
+
+- O botão **"📤 Enviar este dia"** virou **"💬 Enviar no WhatsApp"**: um clique e o WhatsApp abre já com o resumo do dia escrito — no celular abre o app, no computador o WhatsApp Web. Antes era preciso passar pela janela do resumo antes de enviar
+- O envio segue os **nomes como estão na tela**: com o topo em "Nomes ocultos", o texto sai abreviado e avisa "_Nomes abreviados (LGPD)._" no rodapé da mensagem
+- **Texto do dia redesenhado** para leitura no celular: cabeçalho com dia da semana por extenso, panorama em três linhas (quantas pessoas e setores, quantas exigem ação, quantas são programadas, e a contagem por tipo de ocorrência), separadores entre os blocos, e as listas divididas em **"⚠️ EXIGEM AÇÃO"** e **"🗓️ PROGRAMADO"** — férias e banco de horas não competem mais com o que precisa de providência no dia
+- Fecha com **"🏭 POR SETOR"** (o peso de cada setor no dia, do maior para o menor), o absenteísmo do mês e a marcação de confidencialidade
+- A prévia no modal "📤 Faltas do dia" agora mostra a mensagem **como ela chega no WhatsApp** — balão verde, negrito e itálico já aplicados, em vez do texto cru com asteriscos
+
 ## v2.7.0 — 13/08/2026
 
 Impressão por setor **sem nomes** — o papel que pode circular fora do DP.
