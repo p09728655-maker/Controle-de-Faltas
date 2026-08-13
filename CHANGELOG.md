@@ -15,6 +15,11 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.9.1 — 13/08/2026
+
+- **Emojis removidos das mensagens do WhatsApp.** O WhatsApp para Windows recebe o texto pelo link e troca cada emoji por um losango de interrogação — a mensagem chegava suja no grupo, e não era a tela de quem enviou: o texto já saía quebrado. Testado com a fonte Noto Color Emoji instalada, e não muda nada, porque o emoji não chega até a fonte. O layout se sustenta em negrito, itálico e nas linhas divisórias, que atravessam íntegros em qualquer aparelho
+- Vale para as duas mensagens: a lista com nomes ("📤 Faltas do dia") e o resumo por setor ("💬 Por setor no WhatsApp"). Os botões do painel continuam com ícone — ali é o navegador desenhando, e funciona
+
 ## v2.9.0 — 13/08/2026
 
 O envio pelo WhatsApp da aba Hoje virou **o mesmo conteúdo do PDF por setor**.

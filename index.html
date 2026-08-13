@@ -624,7 +624,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.9.0';
+const VERSAO = '2.9.1';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -1478,7 +1478,6 @@ function montarRelatorio(){
 const DIAS_CURTO = ['dom','seg','ter','qua','qui','sex','sáb'];
 /* ordem de leitura para gestão: o que exige ação primeiro, férias por último */
 const ORDEM_STATUS = ['FALTA','ATESTADO','ATRASO','AFASTADO','JUST.','BANCO H.','FÉRIAS','FERIAS'];
-const EMOJI_STATUS = {'FALTA':'❌','ATESTADO':'🏥','ATRASO':'⏰','AFASTADO':'🚑','FÉRIAS':'🏖️','FERIAS':'🏖️','JUST.':'📄','BANCO H.':'🕐'};
 
 const mascararNome = (nome, mostrar)=> mostrar ? nome
   : String(nome).split(' ').map((p,i)=>i===0?p:(p[0]||'')+'***').join(' ');
@@ -1499,7 +1498,10 @@ const cmpDia = (a,b)=>{
   return sa===sb ? a.nome.localeCompare(b.nome,'pt-BR') : sa.localeCompare(sb,'pt-BR');
 };
 
-/* linha divisória: o "━" repetido fecha uma faixa cheia na largura do celular */
+/* linha divisória: o "━" repetido fecha uma faixa cheia na largura do celular.
+   Sem emoji no texto de propósito: o WhatsApp para Windows recebe a mensagem
+   pelo link e troca cada emoji por um losango de interrogação. Negrito, itálico
+   e estas linhas sustentam a hierarquia e chegam íntegros em qualquer aparelho. */
 const LINHA_ZAP = '━━━━━━━━━━━━━━';
 
 /* Resumo do dia no formato WhatsApp. A ordem é a da leitura de gestão no celular:
@@ -1510,16 +1512,16 @@ function textoDia(iso, comNomes){
   const d = new Date(iso+'T12:00:00');
   const diaSemana = tCase(d.toLocaleDateString('pt-BR',{weekday:'long'}));
 
-  const cab = '🔴 *FALTAS DO DIA*\n'+
-              '📅 '+diaSemana+', '+dataBR(iso)+'\n'+
-              '🏭 Patrimar Móveis · Depto. Pessoal\n';
+  const cab = '*FALTAS DO DIA*\n'+
+              diaSemana+', '+dataBR(iso)+'\n'+
+              'Patrimar Móveis · Depto. Pessoal\n';
   const rodape = '\n'+LINHA_ZAP+'\n'+
-                 '🔒 _Confidencial — uso interno. Não divulgar._'+
+                 '_Confidencial — uso interno. Não divulgar._'+
                  (comNomes ? '' : '\n_Nomes abreviados (LGPD)._')+
                  '\n_Painel Faltas e Ausências_';
 
   if(!doDia.length)
-    return cab+LINHA_ZAP+'\n✅ *Nenhuma ocorrência registrada nesta data.*\n'+rodape;
+    return cab+LINHA_ZAP+'\n*Nenhuma ocorrência registrada nesta data.*\n'+rodape;
 
   /* agrupa por tipo de ocorrência e conta por setor */
   const porStatus={}, porSetor={};
@@ -1536,25 +1538,25 @@ function textoDia(iso, comNomes){
   const setoresDia = Object.keys(porSetor).sort((a,b)=>porSetor[b]-porSetor[a] || a.localeCompare(b,'pt-BR'));
 
   let txt = cab+LINHA_ZAP+'\n'+
-    '👥 *'+pessoas+'* ausente'+(pessoas>1?'s':'')+' · 🏭 '+setoresDia.length+
+    '*'+pessoas+'* ausente'+(pessoas>1?'s':'')+' · '+setoresDia.length+
       ' setor'+(setoresDia.length>1?'es':'')+'\n'+
-    '⚠️ *'+somar(acao)+'* exige'+(somar(acao)>1?'m':'')+' ação · 🗓️ *'+somar(prog)+'* programado\n'+
-    ordem.map(s=>(EMOJI_STATUS[s]||'▪')+' '+tCase(s)+' *'+porStatus[s].length+'*').join(' · ')+'\n';
+    '*'+somar(acao)+'* exige'+(somar(acao)>1?'m':'')+' ação · *'+somar(prog)+'* programado\n'+
+    ordem.map(s=>tCase(s)+' *'+porStatus[s].length+'*').join(' · ')+'\n';
 
   /* um bloco por tipo de ocorrência, nome e setor na mesma linha para não esticar a leitura */
   const bloco = s=>{
-    let b='\n'+(EMOJI_STATUS[s]||'▪')+' *'+s+'* · '+porStatus[s].length+'\n';
+    let b='\n*'+s+'* · '+porStatus[s].length+'\n';
     porStatus[s].slice().sort(cmpDia).forEach(r=>{
       const motivo = r.motivo && s!=='FÉRIAS' && s!=='FERIAS' ? ' · _'+tCase(r.motivo)+'_' : '';
       b+='• '+tCase(mascararNome(r.nome, comNomes))+' — '+limparSetor(r.setor)+motivo+'\n';
     });
     return b;
   };
-  if(acao.length) txt += '\n'+LINHA_ZAP+'\n⚠️ *EXIGEM AÇÃO*\n'+acao.map(bloco).join('');
-  if(prog.length) txt += '\n'+LINHA_ZAP+'\n🗓️ *PROGRAMADO*\n'+prog.map(bloco).join('');
+  if(acao.length) txt += '\n'+LINHA_ZAP+'\n*EXIGEM AÇÃO*\n'+acao.map(bloco).join('');
+  if(prog.length) txt += '\n'+LINHA_ZAP+'\n*PROGRAMADO*\n'+prog.map(bloco).join('');
 
   /* fechamento: quanto cada setor pesou no dia */
-  txt += '\n'+LINHA_ZAP+'\n🏭 *POR SETOR*\n'+
+  txt += '\n'+LINHA_ZAP+'\n*POR SETOR*\n'+
     setoresDia.map(s=>s+' *'+porSetor[s]+'*').join(' · ')+'\n';
 
   return txt+absMesZap(d)+rodape;
@@ -1567,15 +1569,15 @@ function textoDiaSetor(iso){
   const d = new Date(iso+'T12:00:00');
   const diaSemana = tCase(d.toLocaleDateString('pt-BR',{weekday:'long'}));
 
-  const cab = '🏭 *AUSÊNCIAS DO DIA POR SETOR*\n'+
-              '📅 '+diaSemana+', '+dataBR(iso)+'\n'+
-              '🏭 Patrimar Móveis · Depto. Pessoal\n';
+  const cab = '*AUSÊNCIAS DO DIA POR SETOR*\n'+
+              diaSemana+', '+dataBR(iso)+'\n'+
+              'Patrimar Móveis · Depto. Pessoal\n';
   const rodape = '\n'+LINHA_ZAP+'\n'+
-                 '🔒 _Confidencial — uso interno. Não divulgar._\n'+
+                 '_Confidencial — uso interno. Não divulgar._\n'+
                  '_Sem identificação de colaboradores — apenas quantidades por setor._';
 
   if(!doDia.length)
-    return cab+LINHA_ZAP+'\n✅ *Nenhuma ocorrência registrada nesta data.*\n'+rodape;
+    return cab+LINHA_ZAP+'\n*Nenhuma ocorrência registrada nesta data.*\n'+rodape;
 
   const porStatus={}, porSetor={}, porMotivo={};
   doDia.forEach(r=>{
@@ -1591,18 +1593,18 @@ function textoDiaSetor(iso){
   const nAcao = doDia.length-nProg;
 
   let txt = cab+LINHA_ZAP+'\n'+
-    '📋 *'+doDia.length+'* ocorrência'+(doDia.length>1?'s':'')+' em '+setoresDia.length+
+    '*'+doDia.length+'* ocorrência'+(doDia.length>1?'s':'')+' em '+setoresDia.length+
       ' setor'+(setoresDia.length>1?'es':'')+'\n'+
-    '⚠️ *'+nAcao+'* exige'+(nAcao>1?'m':'')+' ação · 🗓️ *'+nProg+'* programado\n'+
-    ordem.map(s=>(EMOJI_STATUS[s]||'▪')+' '+tCase(s)+' *'+porStatus[s]+'*').join(' · ')+'\n';
+    '*'+nAcao+'* exige'+(nAcao>1?'m':'')+' ação · *'+nProg+'* programado\n'+
+    ordem.map(s=>tCase(s)+' *'+porStatus[s]+'*').join(' · ')+'\n';
 
   /* uma linha por setor, como a tabela do PDF: setor, total, % do dia e a composição.
      Com um tipo só, a composição cabe na mesma linha — não vale gastar duas. */
-  txt += '\n'+LINHA_ZAP+'\n🏭 *POR SETOR*\n';
+  txt += '\n'+LINHA_ZAP+'\n*POR SETOR*\n';
   setoresDia.forEach(s=>{
     const c={}; porSetor[s].forEach(r=>{ c[r.status]=(c[r.status]||0)+1; });
     const tipos = ordem.filter(st=>c[st]);
-    const comp = tipos.map(st=>(EMOJI_STATUS[st]||'▪')+' '+c[st]+' '+tCase(st)).join(' · ');
+    const comp = tipos.map(st=>c[st]+' '+tCase(st)).join(' · ');
     txt += '\n*'+s+'* — *'+porSetor[s].length+'* _('+fmt(porSetor[s].length/doDia.length*100,1)+'%)_'+
            (tipos.length===1 ? ' · '+comp : '\n'+comp)+'\n';
   });
@@ -1610,7 +1612,7 @@ function textoDiaSetor(iso){
   const motivos = Object.keys(porMotivo)
     .sort((a,b)=>porMotivo[b]-porMotivo[a] || a.localeCompare(b,'pt-BR'))
     .map(m=>m+' ('+porMotivo[m]+')').join(' · ');
-  if(motivos) txt += '\n'+LINHA_ZAP+'\n💬 *MOTIVOS INFORMADOS NO DIA*\n'+motivos+'\n';
+  if(motivos) txt += '\n'+LINHA_ZAP+'\n*MOTIVOS INFORMADOS NO DIA*\n'+motivos+'\n';
 
   return txt+absMesZap(d)+rodape;
 }
@@ -1622,7 +1624,7 @@ function absMesZap(d){
   const cargaMesTot = setores.reduce((s,st)=>s+cargaPeriodo(st,[mes]),0);
   if(!(cargaMesTot>0)) return '';
   const a = hrsMesTot/cargaMesTot;
-  return '\n📉 Absenteísmo de '+MESES_LONGO[mes-1]+': *'+pct(a)+'* (meta 3%) — '+rotAbs(classeAbs(a))+'\n';
+  return '\nAbsenteísmo de '+MESES_LONGO[mes-1]+': *'+pct(a)+'* (meta 3%) — '+rotAbs(classeAbs(a))+'\n';
 }
 
 /* abre o WhatsApp já com o texto do dia — celular abre o app, computador abre o WhatsApp Web */
