@@ -15,6 +15,18 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.3.0 — 13/08/2026
+
+Excel lincado — sem buscar o arquivo toda vez.
+
+- Ao escolher a planilha (clique ou arrastar), o app guarda a referência do arquivo no navegador (Chrome/Edge de computador)
+- Na próxima visita aparece o botão **🔄 Reabrir CONTROLE_FALTAS_2026.xlsx** — 1 clique e o painel monta com a versão atual do arquivo, sem navegar pelas pastas
+- Com o app instalado (PWA), a permissão persiste e o painel **abre sozinho** com os dados
+- Novo botão **🔄 Recarregar** no topo: relê o arquivo do disco na hora — bom para depois de salvar uma alteração no Excel
+- Tudo continua 100% local: o arquivo não sai do computador (LGPD)
+- Em navegadores sem suporte (Firefox, celular), o fluxo continua como era
+- Resumo e impressão do dia agora ordenados pelo nome visível: setor (sem o prefixo numérico) e depois colaborador, em ordem alfabética
+
 ## v2.2.1 — 13/08/2026
 
 - Corrige a impressão do dia: o modal "Faltas do dia" aparecia na folha impressa por cima do relatório A4 — agora só o relatório sai na impressão
