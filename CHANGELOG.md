@@ -15,6 +15,14 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.4.0 — 13/08/2026
+
+Absenteísmo batendo com a planilha + quadro "Quem faltou hoje".
+
+- **Absenteísmo agora bate com o % AUSÊNCIA da planilha por padrão** (inclui as horas dos afastados, ex.: Julho 7,41%). No card Absenteísmo dá para alternar para **"Sem afastados"** — a visão gerenciável, só faltas, atestados e atrasos (Julho 4,63%). O modo escolhido vale para todos os KPIs, gráficos, tabelas, relatórios e resumo do dia
+- Novo quadro **"Quem faltou hoje"** no topo do painel: lista de quem está ausente hoje com setor, ocorrência e motivo — sem precisar abrir nada. Se hoje ainda não tem lançamentos, mostra o último dia com registros. Botão "📤 Enviar este dia" abre direto o resumo para WhatsApp/e-mail/impressão
+- Correção de data: lançamento cuja célula de DATA carrega horário após meio-dia caía no dia seguinte — agora a data é lida corretamente
+
 ## v2.3.0 — 13/08/2026
 
 Excel lincado — sem buscar o arquivo toda vez.
