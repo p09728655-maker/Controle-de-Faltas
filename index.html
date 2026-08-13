@@ -20,6 +20,7 @@
 --ink:#F2F4F5;--ink2:#9AA3AA;--ink3:#646E76;
 --amber:#F5A623;--red:#E5484D;--green:#3FB950;--blue:#5B8DEF;--violet:#8B9CF4;--orange:#F0883E;--r:10px}
 *{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:112px}   /* navegação por âncora nativa: desconta topo + menu fixos */
 body{font-family:Barlow,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-track{background:var(--bg)}
@@ -103,7 +104,6 @@ button{font-family:inherit}
 .secnav a{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink3);text-decoration:none;padding:4px 12px;border-radius:16px;border:1px solid transparent;white-space:nowrap;transition:.15s}
 .secnav a:hover{color:var(--ink)}
 .secnav a.sel{background:rgba(245,166,35,.15);border-color:var(--amber);color:var(--amber)}
-section{scroll-margin-top:112px}
 
 /* ===== ÁREA ===== */
 .area{width:100%;padding:18px 22px 40px;display:flex;flex-direction:column;gap:18px}
@@ -226,7 +226,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 @media(max-width:640px){
   .topo{height:auto;padding:10px 12px;flex-wrap:wrap}
   .secnav{top:0;position:static}
-  section{scroll-margin-top:12px}
+  html{scroll-padding-top:12px}
   .leitura-txt{font-size:21px}
   .area{padding:12px 12px 30px}
 }
@@ -239,7 +239,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
   :root{color-scheme:light!important}
   html{background:#fff!important}
   body{width:auto!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important;background:#fff!important;color:#1f2328!important;font-family:Calibri,Barlow,Arial,sans-serif;font-size:10.5pt}
-  #app,#carregando,#telaImport,#modalInstalar{display:none!important}
+  #app,#carregando,#telaImport,#modalInstalar,#modalDia,.toast-versao{display:none!important}
   #relatorio{display:block!important;width:100%!important;max-width:100%!important}
   #relatorio,#relatorio *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box}
 }
@@ -549,7 +549,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.2.0';
+const VERSAO = '2.2.1';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -1295,7 +1295,7 @@ function montarRelatorioDia(iso){
     const lista = porStatus[s].slice().sort((a,b)=>a.setor===b.setor?(a.nome<b.nome?-1:1):(a.setor<b.setor?-1:1));
     return '<div class="rel-sec"><h2>'+esc(tCase(s))+' ('+lista.length+')</h2>'+
       '<table><thead><tr><th>Colaborador</th><th>Setor</th><th>Departamento</th><th>Motivo</th></tr></thead><tbody>'+
-      lista.map(r=>'<tr><td>'+esc(tCase(mascararDia(r.nome)))+'</td><td>'+esc(limparSetor(r.setor))+'</td><td>'+esc(tCase(r.depto||'—'))+'</td><td>'+esc(r.motivo?tCase(r.motivo):'—')+'</td></tr>').join('')+
+      lista.map(r=>'<tr><td>'+esc(tCase(mascararDia(r.nome)))+'</td><td>'+esc(limparSetor(r.setor))+'</td><td>'+esc(r.depto?limparSetor(r.depto):'—')+'</td><td>'+esc(r.motivo?tCase(r.motivo):'—')+'</td></tr>').join('')+
       '</tbody></table></div>';
   }).join('');
 
@@ -1354,11 +1354,12 @@ $('mdPrint').addEventListener('click', ()=>{
 window.addEventListener('afterprint', ()=>{ imprimindoDia=false; });
 
 /* ================= NAVEGAÇÃO POR SEÇÕES ================= */
+/* a rolagem é a âncora nativa do navegador (scroll-behavior + scroll-padding no CSS);
+   o clique só marca a seção escolhida de imediato */
 const navLinks = document.querySelectorAll('.secnav a');
 navLinks.forEach(a=>{
-  a.addEventListener('click', e=>{
-    e.preventDefault();
-    document.querySelector(a.getAttribute('href')).scrollIntoView({behavior:'smooth'});
+  a.addEventListener('click', ()=>{
+    navLinks.forEach(x=>x.classList.toggle('sel', x===a));
   });
 });
 const spy = new IntersectionObserver(entradas=>{

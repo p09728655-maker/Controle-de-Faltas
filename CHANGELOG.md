@@ -15,6 +15,12 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.2.1 — 13/08/2026
+
+- Corrige a impressão do dia: o modal "Faltas do dia" aparecia na folha impressa por cima do relatório A4 — agora só o relatório sai na impressão
+- Corrige a navegação por seções (Resumo, Quando, Onde…): a rolagem agora usa a âncora nativa do navegador, resolvendo o salto errado para o fim da página em alguns navegadores
+- Departamento sem o prefixo numérico no relatório do dia ("2-PRODUÇÃO" → "Produção")
+
 ## v2.2.0 — 13/08/2026
 
 Correção do absenteísmo + impressão do dia.
