@@ -15,6 +15,21 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.2.0 — 13/08/2026
+
+Correção do absenteísmo + impressão do dia.
+
+**Correção importante:** as horas de **afastados e férias** entravam no cálculo de horas de falta e de absenteísmo. Um afastado o ano inteiro "gerava" 8,8h de falta por dia, e setores pequenos estouravam 100% de absenteísmo (ex.: Transporte com 161%). Agora:
+
+- Horas de falta e absenteísmo contam apenas faltas, atestados e atrasos — férias e afastamentos ficam nos seus próprios indicadores (em dias)
+- Vale para os KPIs, gráficos, tabelas, leitura, relatórios e resumo do dia
+- Se mesmo assim um setor passar de 100%, o painel avisa para conferir a carga na aba HORAS CARGA
+- A tabela de lançamentos e o CSV continuam mostrando o valor bruto da planilha
+
+- Novo botão **🖨 Imprimir dia** dentro do modal "Faltas do dia": relatório A4 em fundo claro só daquele dia, com as ocorrências agrupadas por tipo (faltas primeiro, férias por último), departamento e motivo — bom para imprimir ou salvar em PDF
+- Respeita a opção "Mostrar nomes completos" do modal (LGPD)
+- O absenteísmo do mês aparece no cabeçalho do relatório
+
 ## v2.1.0 — 13/08/2026
 
 Novo layout do resumo **📤 Faltas do dia** para WhatsApp.
