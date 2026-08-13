@@ -601,7 +601,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.5.0';
+const VERSAO = '2.5.1';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -1706,6 +1706,12 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
       nw.addEventListener('statechange', ()=>{
         if(nw.state==='installed' && navigator.serviceWorker.controller) avisarNovaVersao();
       });
+    });
+    /* sem isto, quem deixa o painel aberto direto só descobre a atualização
+       na checagem automática do navegador (~24h) ou ao recarregar */
+    setInterval(()=>{ reg.update().catch(()=>{}); }, 30*60*1000);
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.visibilityState==='visible') reg.update().catch(()=>{});
     });
   }).catch(()=>{});
 }
