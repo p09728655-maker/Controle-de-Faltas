@@ -15,6 +15,15 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.6.0 — 13/08/2026
+
+Aba **Hoje** reorganizada — acabou o espaço vazio no meio e chegou o resumo por setor.
+
+- **Novo quadro "Resumo do dia por setor"**: quatro números do dia (ausentes, exigem ação, programado e setores afetados) e uma tabela com o setor, quanto deu de cada tipo de ocorrência, o total e uma barra de composição colorida. A linha "Total do dia" fecha a conta de cada coluna
+- Os blocos de "quem está ausente" agora se **encaixam pela altura, em cascata** — antes o setor mais cheio esticava a linha inteira e sobrava um buraco embaixo dos setores pequenos
+- Blocos com nome do colaborador quebrando em duas linhas quando preciso, em vez de esticar a coluna
+- Cabeçalho de cada coluna do resumo na cor da ocorrência (falta em vermelho, atestado em azul, afastado em laranja, atraso em violeta, férias em verde) — mesma cor das etiquetas do painel
+
 ## v2.5.2 — 13/08/2026
 
 - Removido o quadro "Quem faltou hoje" do Resumo — ficou obsoleto com a aba **Hoje**, que mostra o dia completo por setor. O botão "📤 Enviar este dia" segue na aba Hoje
