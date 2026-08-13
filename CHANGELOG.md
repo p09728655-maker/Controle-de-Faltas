@@ -15,6 +15,10 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.5.2 — 13/08/2026
+
+- Removido o quadro "Quem faltou hoje" do Resumo — ficou obsoleto com a aba **Hoje**, que mostra o dia completo por setor. O botão "📤 Enviar este dia" segue na aba Hoje
+
 ## v2.5.1 — 13/08/2026
 
 - O aviso **"🔄 Nova versão disponível"** agora chega mesmo com o painel aberto direto: o app confere se saiu atualização a cada 30 minutos e também quando a aba volta a ficar visível (minimizou e voltou). Antes, só ao abrir/recarregar ou na checagem automática do navegador (~24h)
