@@ -17,7 +17,7 @@ Lê a planilha `CONTROLE_FALTAS_2026.xlsx` direto no navegador — **nenhum dado
 ## Como usar
 
 1. Abrir o painel
-2. Clicar ou arrastar o `CONTROLE_FALTAS_2026.xlsx`
+2. Clicar ou arrastar o `CONTROLE_FALTAS_2026.xlsx` — no Chrome/Edge o arquivo fica **lincado**: nas próximas visitas basta 1 clique em "🔄 Reabrir" (ou o painel abre sozinho, se instalado como app), e o botão "🔄 Recarregar" no topo relê o arquivo após salvar alterações no Excel
 3. A caixa **"O que este painel está dizendo"** resume o período em uma frase
 4. Navegar pelas seções fixas no topo: **Resumo · Quando · Onde · Quem · Por quê · Rotatividade · Detalhe**
 5. Filtrar por período (chips), mês, departamento, setor, ocorrência ou busca livre — os filtros ativos viram tags removíveis

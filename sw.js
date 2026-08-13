@@ -2,7 +2,7 @@
    Ao publicar uma atualização, mude a versão abaixo junto com a constante
    VERSAO do index.html e registre no CHANGELOG.md. A troca do nome do cache
    dispara o aviso "Nova versão disponível" para quem já usa o painel. */
-const CACHE = 'faltas-patrimar-v2.2.1';
+const CACHE = 'faltas-patrimar-v2.3.0';
 const ARQUIVOS = [
   './',
   './index.html',
