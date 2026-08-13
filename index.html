@@ -548,7 +548,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.0.0';
+const VERSAO = '2.1.0';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -1198,36 +1198,48 @@ function montarRelatorio(){
 }
 
 /* ================= FALTAS DO DIA (WhatsApp / e-mail) ================= */
-const DIAS_LONGO = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+const DIAS_CURTO = ['dom','seg','ter','qua','qui','sex','sáb'];
+/* ordem de leitura para gestão: o que exige ação primeiro, férias por último */
+const ORDEM_STATUS = ['FALTA','ATESTADO','ATRASO','AFASTADO','JUST.','BANCO H.','FÉRIAS','FERIAS'];
+const EMOJI_STATUS = {'FALTA':'❌','ATESTADO':'🏥','ATRASO':'⏰','AFASTADO':'🚑','FÉRIAS':'🏖️','FERIAS':'🏖️','JUST.':'📄','BANCO H.':'🕐'};
 
 function mascararDia(nome){
   if($('mdNomes').checked) return nome;
   return nome.split(' ').map((p,i)=>i===0?p:(p[0]||'')+'***').join(' ');
 }
+/* CAIXA ALTA → Maiúsculas E Minúsculas (mais leve de ler no celular) */
+const SIGLAS = {'inss':'INSS','dp':'DP','rh':'RH','cid':'CID','tst':'TST'};
+function tCase(s){
+  return String(s).toLowerCase().split(' ').map(p=>{
+    if(SIGLAS[p]) return SIGLAS[p];
+    return ['da','de','do','das','dos','e'].includes(p) ? p : p.charAt(0).toUpperCase()+p.slice(1);
+  }).join(' ');
+}
+/* remove o prefixo numérico do setor: "14-ALMOXARIFADO" → "Almoxarifado" */
+const limparSetor = s=>tCase(String(s).replace(/^\s*\d+\s*-\s*/,''));
 
 function textoDia(iso){
   const doDia = D.registros.filter(r=>r.data===iso);
   const d = new Date(iso+'T12:00:00');
-  const cab = '🔴 *FALTAS DO DIA — '+DIAS_LONGO[d.getDay()]+', '+dataBR(iso)+'*\n'+
-              '_Patrimar Móveis · Departamento Pessoal_\n\n';
+  let txt = '*FALTAS DO DIA* — '+DIAS_CURTO[d.getDay()]+', '+dataBR(iso)+'\n'+
+            '_Patrimar Móveis · Depto. Pessoal_\n';
   if(!doDia.length)
-    return cab+'✅ Nenhuma ocorrência registrada nesta data.\n\n_Gerado pelo painel Faltas e Ausências_';
+    return txt+'\n✅ Nenhuma ocorrência registrada nesta data.\n\n_Gerado pelo painel Faltas e Ausências_';
 
-  /* contagem por ocorrência */
+  /* agrupa por tipo de ocorrência */
   const porStatus={};
-  doDia.forEach(r=>{ porStatus[r.status]=(porStatus[r.status]||0)+1; });
-  const resumoStatus = Object.entries(porStatus).sort((a,b)=>b[1]-a[1])
-    .map(([s,q])=>s.charAt(0)+s.slice(1).toLowerCase()+' '+q).join(' · ');
+  doDia.forEach(r=>{ (porStatus[r.status]=porStatus[r.status]||[]).push(r); });
+  const ordem=[...ORDEM_STATUS.filter(s=>porStatus[s]),
+               ...Object.keys(porStatus).filter(s=>!ORDEM_STATUS.includes(s)).sort()];
 
-  let txt = cab+'Ocorrências: *'+doDia.length+'* ('+resumoStatus+')\n';
+  txt+='\n*'+doDia.length+' ocorrências:* '+
+    ordem.map(s=>(EMOJI_STATUS[s]||'▪')+' '+tCase(s)+' '+porStatus[s].length).join('  ·  ')+'\n';
 
-  /* lista por departamento */
-  const porDepto={};
-  doDia.forEach(r=>{ const dp=r.depto||'Sem departamento'; (porDepto[dp]=porDepto[dp]||[]).push(r); });
-  Object.keys(porDepto).sort().forEach(dp=>{
-    txt+='\n*'+dp.toUpperCase()+'*\n';
-    porDepto[dp].sort((a,b)=>a.setor===b.setor?(a.nome<b.nome?-1:1):(a.setor<b.setor?-1:1)).forEach(r=>{
-      txt+='• '+mascararDia(r.nome)+' — '+r.setor+' — '+r.status+(r.motivo?' ('+r.motivo+')':'')+'\n';
+  ordem.forEach(s=>{
+    txt+='\n'+(EMOJI_STATUS[s]||'▪')+' *'+s+'* ('+porStatus[s].length+')\n';
+    porStatus[s].sort((a,b)=>a.setor===b.setor?(a.nome<b.nome?-1:1):(a.setor<b.setor?-1:1)).forEach(r=>{
+      const motivo = r.motivo && s!=='FÉRIAS' && s!=='FERIAS' ? ' — _'+tCase(r.motivo)+'_' : '';
+      txt+='• '+tCase(mascararDia(r.nome))+' · '+limparSetor(r.setor)+motivo+'\n';
     });
   });
 
