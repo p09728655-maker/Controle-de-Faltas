@@ -436,21 +436,6 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
     </div>
   </div>
 
-  <div class="card" style="margin-top:12px">
-    <div class="card-cab">
-      <span class="ponto" style="background:var(--red)"></span><span class="card-tit">Quem faltou hoje</span>
-      <div class="mini"><button id="btnEnviarHoje" title="Abre o resumo deste dia para enviar por WhatsApp, e-mail ou imprimir">📤 Enviar este dia</button></div>
-    </div>
-    <div class="card-sub" id="hojeSub">—</div>
-    <div class="tab-wrap" style="max-height:320px" id="hojeWrap">
-      <table>
-        <thead><tr><th>Colaborador</th><th>Setor</th><th>Ocorrência</th><th>Motivo</th></tr></thead>
-        <tbody id="tbHoje"></tbody>
-      </table>
-    </div>
-    <div class="nota v" id="hojeVazio" style="display:none"></div>
-    <div class="nota i" id="hojeMais" style="display:none">Lista longa? A aba <a href="#sec-hoje" style="color:var(--amber)">Hoje</a> mostra o dia completo, setor por setor.</div>
-  </div>
 </section>
 
 <section id="sec-hoje" class="secao">
@@ -601,7 +586,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.5.1';
+const VERSAO = '2.5.2';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -1222,7 +1207,7 @@ function isoHoje(){
   const d=new Date();
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
-let diaCardHoje = null;   /* dia exibido no card (para o botão Enviar) */
+let diaCardHoje = null;   /* dia exibido na aba Hoje (para o botão Enviar) */
 function renderHoje(){
   const hoje = isoHoje();
   let alvo = hoje;
@@ -1238,13 +1223,7 @@ function renderHoje(){
   const dAlvo = new Date(alvo+'T12:00:00');
   const rotDia = DIAS_CURTO[dAlvo.getDay()]+', '+dataBR(alvo);
 
-  const vazio=$('hojeVazio');
   if(!doDia.length){
-    $('hojeSub').textContent = 'Hoje · '+rotDia;
-    $('hojeWrap').style.display='none';
-    $('hojeMais').style.display='none';
-    vazio.style.display='block';
-    vazio.innerHTML='✅ Nenhuma ocorrência registrada até agora.';
     $('hojeSetorSub').textContent = 'Hoje · '+rotDia;
     $('hojeSetores').innerHTML='';
     $('hojeSetorVazio').style.display='block';
@@ -1256,23 +1235,8 @@ function renderHoje(){
   doDia.forEach(r=>{ porStatus[r.status]=(porStatus[r.status]||0)+1; });
   const resumo = [...ORDEM_STATUS.filter(s=>porStatus[s]), ...Object.keys(porStatus).filter(s=>!ORDEM_STATUS.includes(s)).sort()]
     .map(s=>tCase(s)+' '+porStatus[s]).join(' · ');
-  $('hojeSub').textContent = (alvo===hoje ? 'Hoje · ' : 'Hoje sem registros — mostrando o último dia com lançamentos: ')+
+  $('hojeSetorSub').textContent = (alvo===hoje ? 'Hoje · ' : 'Hoje sem registros — mostrando o último dia com lançamentos: ')+
     rotDia+' · '+doDia.length+' ocorrência'+(doDia.length>1?'s':'')+' ('+resumo+')';
-
-  const orden = doDia.slice().sort((a,b)=>{
-    const ia=ORDEM_STATUS.indexOf(a.status), ib=ORDEM_STATUS.indexOf(b.status);
-    return ((ia===-1?99:ia)-(ib===-1?99:ib)) || cmpDia(a,b);
-  });
-  $('hojeWrap').style.display='';
-  vazio.style.display='none';
-  $('tbHoje').innerHTML = orden.map(r=>
-    '<tr><td class="forte">'+esc(tCase(mascarar(r.nome)))+'</td><td>'+esc(limparSetor(r.setor))+'</td>'+
-    '<td>'+pillStatus(r.status)+'</td><td>'+esc(r.motivo?tCase(r.motivo):'—')+'</td></tr>').join('');
-  /* se a lista não cabe no card compacto, aponta para a aba Hoje */
-  $('hojeMais').style.display = doDia.length>8 ? 'block' : 'none';
-
-  /* ---- aba HOJE: mesmos registros, agrupados por setor ---- */
-  $('hojeSetorSub').textContent = $('hojeSub').textContent;
   $('hojeSetorVazio').style.display='none';
   const porSetor={};
   doDia.forEach(r=>{ const s=limparSetor(r.setor); (porSetor[s]=porSetor[s]||[]).push(r); });
@@ -1631,12 +1595,10 @@ function iniciar(){
       });
     });
 
-    const enviarDiaDoCard = ()=>{
+    $('btnEnviarHoje2').addEventListener('click', ()=>{
       if(diaCardHoje) $('mdData').value = diaCardHoje;
       abrirModalDia();
-    };
-    $('btnEnviarHoje').addEventListener('click', enviarDiaDoCard);
-    $('btnEnviarHoje2').addEventListener('click', enviarDiaDoCard);
+    });
 
     $('btnLgpd').addEventListener('click', ()=>{
       lgpd=!lgpd;
