@@ -214,13 +214,29 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 .pl-gray{background:rgba(154,163,170,.12);color:var(--ink2)}
 .mais{text-align:center;padding:12px;color:var(--ink3);font-size:12.5px}
 
-/* ===== ABA HOJE — blocos por setor ===== */
-.hj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px;align-items:start}
-@media(max-width:640px){.hj-grid{grid-template-columns:1fr}}
-.hj-set{border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.hj-set h3{margin:0;padding:8px 12px;background:var(--surf2);border-bottom:1px solid var(--line);font-family:'Barlow Condensed',sans-serif;font-size:13.5px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--ink);display:flex;justify-content:space-between;align-items:center}
-.hj-set h3 .qt{color:var(--amber);font-size:12.5px}
+/* ===== ABA HOJE — resumo e blocos por setor ===== */
+.hj-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:12px}
+.hj-kpi{background:var(--surf2);border:1px solid var(--line);border-left:3px solid var(--c,var(--amber));border-radius:8px;padding:9px 12px;min-width:0}
+.hj-kpi .r{font-family:'Barlow Condensed',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink3)}
+.hj-kpi .v{font-family:'IBM Plex Mono',monospace;font-size:23px;font-weight:500;line-height:1.15;color:var(--ink)}
+.hj-kpi .s{font-size:11.5px;color:var(--ink3);line-height:1.35;margin-top:1px}
+/* resumo por setor — sem rolagem interna, o dia inteiro de uma vez */
+.hj-res td,.hj-res th{padding:7px 10px}
+.hj-res td.z{color:var(--ink3)}
+.hj-res th:last-child,.hj-res td:last-child{width:24%}
+.hj-res tfoot td{position:sticky;bottom:0;background:var(--surf2);color:var(--ink);font-weight:600;border-top:1px solid var(--line2);border-bottom:0}
+.hj-bar{display:flex;height:8px;border-radius:5px;overflow:hidden;min-width:70px;background:var(--bg)}
+.hj-bar i{display:block;height:100%}
+/* colunas em cascata: os blocos se encaixam pela altura, sem buracos entre eles */
+.hj-grid{columns:380px;column-gap:12px}
+@media(max-width:640px){.hj-grid{columns:1}}
+.hj-set{border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:0 0 12px;break-inside:avoid;-webkit-column-break-inside:avoid}
+.hj-set h3{margin:0;padding:8px 12px;background:var(--surf2);border-bottom:1px solid var(--line);font-family:'Barlow Condensed',sans-serif;font-size:13.5px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--ink);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.hj-set h3 .qt{color:var(--amber);font-size:12.5px;flex-shrink:0}
 .hj-set thead th{position:static}
+.hj-set td{white-space:normal;padding:7px 10px}
+.hj-set td:nth-child(2){white-space:nowrap;width:1%}
+.hj-set td:last-child{color:var(--ink3);font-size:12.5px}
 .mais button{background:var(--surf2);border:1px solid var(--line);color:var(--ink2);border-radius:7px;padding:6px 16px;font-size:12.5px;font-weight:600;cursor:pointer}
 .mais button:hover{border-color:var(--amber);color:var(--amber)}
 .vazio{display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink3);font-size:13px;font-style:italic}
@@ -442,12 +458,20 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
   <div class="secao-cab"><span class="secao-tit">Hoje</span><span class="secao-sub">quem está ausente agora, setor por setor</span></div>
   <div class="card">
     <div class="card-cab">
-      <span class="ponto" style="background:var(--red)"></span><span class="card-tit">Ausências do dia por setor</span>
+      <span class="ponto" style="background:var(--red)"></span><span class="card-tit">Resumo do dia por setor</span>
       <div class="mini"><button id="btnEnviarHoje2" title="Abre o resumo deste dia para enviar por WhatsApp, e-mail ou imprimir">📤 Enviar este dia</button></div>
     </div>
     <div class="card-sub" id="hojeSetorSub">—</div>
-    <div id="hojeSetores"></div>
+    <div class="hj-kpis" id="hojeKpis"></div>
+    <div id="hojeResumo"></div>
     <div class="nota v" id="hojeSetorVazio" style="display:none"></div>
+  </div>
+  <div class="card" id="hojeCardDet">
+    <div class="card-cab">
+      <span class="ponto" style="background:var(--amber)"></span><span class="card-tit">Quem está ausente, setor por setor</span>
+    </div>
+    <div class="card-sub">Os blocos se encaixam pela altura para não sobrar espaço vazio. Dentro de cada setor: primeiro o que exige ação, férias por último.</div>
+    <div id="hojeSetores"></div>
   </div>
 </section>
 
@@ -586,7 +610,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.5.2';
+const VERSAO = '2.6.0';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -821,6 +845,11 @@ const mascarar = nome=>{
 };
 const PILL_STATUS = {'FALTA':'pl-red','ATESTADO':'pl-blue','AFASTADO':'pl-orange','ATRASO':'pl-violet','FÉRIAS':'pl-green','FERIAS':'pl-green','JUST.':'pl-amber','BANCO H.':'pl-gray'};
 const pillStatus = st=>'<span class="pill '+(PILL_STATUS[st]||'pl-gray')+'">'+esc(st)+'</span>';
+const COR_STATUS = {'FALTA':'var(--red)','ATESTADO':'var(--blue)','AFASTADO':'var(--orange)','ATRASO':'var(--violet)',
+                    'FÉRIAS':'var(--green)','FERIAS':'var(--green)','JUST.':'var(--amber)','BANCO H.':'var(--ink2)'};
+const corStatus = st=>COR_STATUS[st]||'var(--ink3)';
+/* férias e banco de horas são ausências combinadas antes; o resto exige ação do DP no dia */
+const PROGRAMADO = ['FÉRIAS','FERIAS','BANCO H.'];
 const classeAbs = a=>!isFinite(a)?'':a<0.03?'ok':a<=0.05?'alerta':'critico';
 const rotAbs = c=>c==='ok'?'dentro da meta':c==='alerta'?'em atenção':'crítico';
 
@@ -1225,23 +1254,67 @@ function renderHoje(){
 
   if(!doDia.length){
     $('hojeSetorSub').textContent = 'Hoje · '+rotDia;
-    $('hojeSetores').innerHTML='';
+    $('hojeKpis').innerHTML=''; $('hojeResumo').innerHTML=''; $('hojeSetores').innerHTML='';
+    $('hojeCardDet').hidden = true;
     $('hojeSetorVazio').style.display='block';
     $('hojeSetorVazio').innerHTML='✅ Nenhuma ocorrência registrada até agora.';
     return;
   }
-
-  const porStatus={};
-  doDia.forEach(r=>{ porStatus[r.status]=(porStatus[r.status]||0)+1; });
-  const resumo = [...ORDEM_STATUS.filter(s=>porStatus[s]), ...Object.keys(porStatus).filter(s=>!ORDEM_STATUS.includes(s)).sort()]
-    .map(s=>tCase(s)+' '+porStatus[s]).join(' · ');
-  $('hojeSetorSub').textContent = (alvo===hoje ? 'Hoje · ' : 'Hoje sem registros — mostrando o último dia com lançamentos: ')+
-    rotDia+' · '+doDia.length+' ocorrência'+(doDia.length>1?'s':'')+' ('+resumo+')';
+  $('hojeCardDet').hidden = false;
   $('hojeSetorVazio').style.display='none';
-  const porSetor={};
-  doDia.forEach(r=>{ const s=limparSetor(r.setor); (porSetor[s]=porSetor[s]||[]).push(r); });
+
+  /* contagens do dia: por tipo de ocorrência e por setor */
+  const porStatus={}, porSetor={};
+  doDia.forEach(r=>{
+    porStatus[r.status]=(porStatus[r.status]||0)+1;
+    const s=limparSetor(r.setor); (porSetor[s]=porSetor[s]||[]).push(r);
+  });
+  const statusDia = [...ORDEM_STATUS.filter(s=>porStatus[s]),
+                     ...Object.keys(porStatus).filter(s=>!ORDEM_STATUS.includes(s)).sort()];
+  const setores = Object.keys(porSetor)
+    .sort((a,b)=>porSetor[b].length-porSetor[a].length || a.localeCompare(b,'pt-BR'));
+  const pessoas = new Set(doDia.map(r=>r.nome)).size;
+  const programado = statusDia.filter(s=>PROGRAMADO.includes(s));
+  const acao = statusDia.filter(s=>!PROGRAMADO.includes(s));
+  const nProg = programado.reduce((t,s)=>t+porStatus[s],0);
+  const maior = setores[0];
+
+  $('hojeSetorSub').textContent = (alvo===hoje ? 'Hoje · ' : 'Hoje sem registros — mostrando o último dia com lançamentos: ')+
+    rotDia+' · '+doDia.length+' ocorrência'+(doDia.length>1?'s':'')+' em '+setores.length+
+    ' setor'+(setores.length>1?'es':'');
+
+  /* ---- números do dia ---- */
+  const kpi = (cor,rot,val,sub)=>'<div class="hj-kpi" style="--c:'+cor+'"><div class="r">'+rot+'</div>'+
+    '<div class="v">'+val+'</div><div class="s">'+sub+'</div></div>';
+  const nomesDe = L => L.length ? L.map(s=>tCase(s)).join(' · ') : '—';
+  $('hojeKpis').innerHTML =
+    kpi('var(--amber)','Ausentes no dia', fmt(pessoas),
+        pessoas===doDia.length ? 'pessoas com lançamento no dia' : fmt(doDia.length)+' lançamentos no dia') +
+    kpi('var(--red)','Exigem ação', fmt(doDia.length-nProg), nomesDe(acao)) +
+    kpi('var(--green)','Programado', fmt(nProg), nomesDe(programado)) +
+    kpi('var(--violet)','Setores afetados', fmt(setores.length),
+        'maior: '+esc(maior)+' ('+porSetor[maior].length+')');
+
+  /* ---- resumo por setor: quantos e de que tipo ---- */
+  const th = statusDia.map(s=>'<th class="n" style="color:'+corStatus(s)+'">'+esc(tCase(s))+'</th>').join('');
+  const barra = c=>'<span class="hj-bar">'+statusDia.filter(s=>c[s])
+    .map(s=>'<i style="flex:'+c[s]+';background:'+corStatus(s)+'"></i>').join('')+'</span>';
+  const linhas = setores.map(s=>{
+    const c={}; porSetor[s].forEach(r=>{ c[r.status]=(c[r.status]||0)+1; });
+    return '<tr><td class="forte">'+esc(s)+'</td>'+
+      statusDia.map(st=>'<td class="n'+(c[st]?'':' z')+'">'+(c[st]?fmt(c[st]):'—')+'</td>').join('')+
+      '<td class="n forte">'+fmt(porSetor[s].length)+'</td><td>'+barra(c)+'</td></tr>';
+  }).join('');
+  $('hojeResumo').innerHTML =
+    '<div class="tab-wrap hj-res" style="max-height:none">'+
+    '<table><thead><tr><th>Setor</th>'+th+'<th class="n">Total</th><th>Composição</th></tr></thead>'+
+    '<tbody>'+linhas+'</tbody>'+
+    '<tfoot><tr><td>Total do dia</td>'+statusDia.map(s=>'<td class="n">'+fmt(porStatus[s])+'</td>').join('')+
+    '<td class="n">'+fmt(doDia.length)+'</td><td>'+barra(porStatus)+'</td></tr></tfoot></table></div>';
+
+  /* ---- detalhe: um bloco por setor, encaixados em colunas ---- */
   $('hojeSetores').innerHTML = '<div class="hj-grid">'+
-    Object.keys(porSetor).sort((a,b)=>porSetor[b].length-porSetor[a].length || a.localeCompare(b,'pt-BR')).map(s=>{
+    setores.map(s=>{
       const lista = porSetor[s].slice().sort((a,b)=>{
         const ia=ORDEM_STATUS.indexOf(a.status), ib=ORDEM_STATUS.indexOf(b.status);
         return ((ia===-1?99:ia)-(ib===-1?99:ib)) || a.nome.localeCompare(b.nome,'pt-BR');
