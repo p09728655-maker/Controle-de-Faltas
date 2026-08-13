@@ -225,6 +225,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 .hj-res td.z{color:var(--ink3)}
 .hj-res th:last-child,.hj-res td:last-child{width:24%}
 .hj-res tfoot td{position:sticky;bottom:0;background:var(--surf2);color:var(--ink);font-weight:600;border-top:1px solid var(--line2);border-bottom:0}
+.hj-res tfoot td.n{text-align:right;font-family:'IBM Plex Mono',monospace}
 .hj-bar{display:flex;height:8px;border-radius:5px;overflow:hidden;min-width:70px;background:var(--bg)}
 .hj-bar i{display:block;height:100%}
 /* colunas em cascata: os blocos se encaixam pela altura, sem buracos entre eles */
@@ -302,6 +303,8 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 #relatorio td{padding:4px 7px;border-bottom:1px solid #e4e4e4;color:#333;white-space:normal;word-break:break-word;overflow-wrap:anywhere}
 #relatorio tbody tr:nth-child(2n) td{background:#faf7ef}
 #relatorio td.destaque{font-weight:700;color:#a8140f}
+#relatorio tfoot td{background:#f7ecc0;font-weight:700;border-top:1.5px solid #a8140f;border-bottom:0}
+#relatorio td.z{color:#bbb}
 .rel-rodape{margin-top:14px;font-size:8pt;color:#999;text-align:center;border-top:1px solid #ddd;padding-top:6px}
 </style>
 </head>
@@ -352,6 +355,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
       <button class="md-btn md-mail" id="mdMail">Enviar por e-mail</button>
       <button class="md-btn md-copiar" id="mdCopiar">Copiar texto</button>
       <button class="md-btn md-copiar" id="mdPrint" title="Relatório A4 só deste dia, para imprimir ou salvar em PDF">🖨 Imprimir dia</button>
+      <button class="md-btn md-copiar" id="mdPrintSetor" title="Relatório A4 só com as quantidades por setor — sem nomes, pode circular fora do DP">🖨 Por setor (sem nomes)</button>
     </div>
   </div>
 </div>
@@ -459,7 +463,10 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
   <div class="card">
     <div class="card-cab">
       <span class="ponto" style="background:var(--red)"></span><span class="card-tit">Resumo do dia por setor</span>
-      <div class="mini"><button id="btnEnviarHoje2" title="Abre o resumo deste dia para enviar por WhatsApp, e-mail ou imprimir">📤 Enviar este dia</button></div>
+      <div class="mini">
+        <button id="btnImprimirSetor" title="Imprime só as quantidades por setor — sem nomes, pode circular fora do DP">🖨 Por setor (sem nomes)</button>
+        <button id="btnEnviarHoje2" title="Abre o resumo deste dia para enviar por WhatsApp, e-mail ou imprimir">📤 Enviar este dia</button>
+      </div>
     </div>
     <div class="card-sub" id="hojeSetorSub">—</div>
     <div class="hj-kpis" id="hojeKpis"></div>
@@ -610,7 +617,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.6.0';
+const VERSAO = '2.7.0';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -1271,17 +1278,17 @@ function renderHoje(){
   });
   const statusDia = [...ORDEM_STATUS.filter(s=>porStatus[s]),
                      ...Object.keys(porStatus).filter(s=>!ORDEM_STATUS.includes(s)).sort()];
-  const setores = Object.keys(porSetor)
+  const setoresDia = Object.keys(porSetor)
     .sort((a,b)=>porSetor[b].length-porSetor[a].length || a.localeCompare(b,'pt-BR'));
   const pessoas = new Set(doDia.map(r=>r.nome)).size;
   const programado = statusDia.filter(s=>PROGRAMADO.includes(s));
   const acao = statusDia.filter(s=>!PROGRAMADO.includes(s));
   const nProg = programado.reduce((t,s)=>t+porStatus[s],0);
-  const maior = setores[0];
+  const maior = setoresDia[0];
 
   $('hojeSetorSub').textContent = (alvo===hoje ? 'Hoje · ' : 'Hoje sem registros — mostrando o último dia com lançamentos: ')+
-    rotDia+' · '+doDia.length+' ocorrência'+(doDia.length>1?'s':'')+' em '+setores.length+
-    ' setor'+(setores.length>1?'es':'');
+    rotDia+' · '+doDia.length+' ocorrência'+(doDia.length>1?'s':'')+' em '+setoresDia.length+
+    ' setor'+(setoresDia.length>1?'es':'');
 
   /* ---- números do dia ---- */
   const kpi = (cor,rot,val,sub)=>'<div class="hj-kpi" style="--c:'+cor+'"><div class="r">'+rot+'</div>'+
@@ -1292,14 +1299,14 @@ function renderHoje(){
         pessoas===doDia.length ? 'pessoas com lançamento no dia' : fmt(doDia.length)+' lançamentos no dia') +
     kpi('var(--red)','Exigem ação', fmt(doDia.length-nProg), nomesDe(acao)) +
     kpi('var(--green)','Programado', fmt(nProg), nomesDe(programado)) +
-    kpi('var(--violet)','Setores afetados', fmt(setores.length),
+    kpi('var(--violet)','Setores afetados', fmt(setoresDia.length),
         'maior: '+esc(maior)+' ('+porSetor[maior].length+')');
 
   /* ---- resumo por setor: quantos e de que tipo ---- */
   const th = statusDia.map(s=>'<th class="n" style="color:'+corStatus(s)+'">'+esc(tCase(s))+'</th>').join('');
   const barra = c=>'<span class="hj-bar">'+statusDia.filter(s=>c[s])
     .map(s=>'<i style="flex:'+c[s]+';background:'+corStatus(s)+'"></i>').join('')+'</span>';
-  const linhas = setores.map(s=>{
+  const linhas = setoresDia.map(s=>{
     const c={}; porSetor[s].forEach(r=>{ c[r.status]=(c[r.status]||0)+1; });
     return '<tr><td class="forte">'+esc(s)+'</td>'+
       statusDia.map(st=>'<td class="n'+(c[st]?'':' z')+'">'+(c[st]?fmt(c[st]):'—')+'</td>').join('')+
@@ -1314,7 +1321,7 @@ function renderHoje(){
 
   /* ---- detalhe: um bloco por setor, encaixados em colunas ---- */
   $('hojeSetores').innerHTML = '<div class="hj-grid">'+
-    setores.map(s=>{
+    setoresDia.map(s=>{
       const lista = porSetor[s].slice().sort((a,b)=>{
         const ia=ORDEM_STATUS.indexOf(a.status), ib=ORDEM_STATUS.indexOf(b.status);
         return ((ia===-1?99:ia)-(ib===-1?99:ib)) || a.nome.localeCompare(b.nome,'pt-BR');
@@ -1567,6 +1574,69 @@ function montarRelatorioDia(iso){
     '<div class="rel-rodape"><b>Documento confidencial — uso interno. Não divulgar.</b><br>Patrimar Móveis Ltda · Controle de Faltas e Ausências · '+esc($('topoArq').textContent)+($('mdNomes').checked?'':' · nomes ocultos (LGPD)')+'</div>';
 }
 
+/* relatório A4 do dia por setor — só quantidades, sem nomes.
+   Serve para circular fora do DP (mural, produção, diretoria) sem expor ninguém. */
+function montarRelatorioSetorDia(iso){
+  const doDia = D.registros.filter(r=>r.data===iso);
+  const d = new Date(iso+'T12:00:00');
+  const diaLongo = d.toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+  const logo = document.querySelector('.topo .logo-chip img').src;
+
+  const porStatus={}, porSetor={}, porMotivo={};
+  doDia.forEach(r=>{
+    porStatus[r.status]=(porStatus[r.status]||0)+1;
+    const s=limparSetor(r.setor); (porSetor[s]=porSetor[s]||[]).push(r);
+    if(r.motivo){ const m=tCase(r.motivo); porMotivo[m]=(porMotivo[m]||0)+1; }
+  });
+  const ordem=[...ORDEM_STATUS.filter(s=>porStatus[s]),
+               ...Object.keys(porStatus).filter(s=>!ORDEM_STATUS.includes(s)).sort()];
+  const setoresDia = Object.keys(porSetor)
+    .sort((a,b)=>porSetor[b].length-porSetor[a].length || a.localeCompare(b,'pt-BR'));
+  const nProg = ordem.filter(s=>PROGRAMADO.includes(s)).reduce((t,s)=>t+porStatus[s],0);
+
+  const cab = '<tr><th>Setor</th>'+ordem.map(s=>'<th class="n">'+esc(tCase(s))+'</th>').join('')+
+              '<th class="n">Total</th><th class="n">% do dia</th></tr>';
+  const linhas = setoresDia.map(s=>{
+    const c={}; porSetor[s].forEach(r=>{ c[r.status]=(c[r.status]||0)+1; });
+    return '<tr><td class="destaque">'+esc(s)+'</td>'+
+      ordem.map(st=>'<td class="n'+(c[st]?'':' z')+'">'+(c[st]||'—')+'</td>').join('')+
+      '<td class="n destaque">'+porSetor[s].length+'</td>'+
+      '<td class="n">'+fmt(porSetor[s].length/doDia.length*100,1)+'%</td></tr>';
+  }).join('');
+  const rodapeTab = '<tr><td>Total do dia</td>'+ordem.map(s=>'<td class="n">'+porStatus[s]+'</td>').join('')+
+                    '<td class="n">'+doDia.length+'</td><td class="n">100,0%</td></tr>';
+
+  const motivos = Object.keys(porMotivo)
+    .sort((a,b)=>porMotivo[b]-porMotivo[a] || a.localeCompare(b,'pt-BR'))
+    .map(m=>esc(m)+' ('+porMotivo[m]+')').join(' · ');
+
+  /* absenteísmo do mês do dia — mesma conta do relatório do dia */
+  const mes = d.getMonth()+1;
+  const hrsMesTot = D.registros.filter(r=>mesDe(r)===mes).reduce((s,r)=>s+hDe(r),0);
+  const cargaMesTot = setores.reduce((s,st)=>s+cargaPeriodo(st,[mes]),0);
+  const absMesTxt = cargaMesTot>0
+    ? ' &nbsp;·&nbsp; Absenteísmo de '+MESES_LONGO[mes-1]+': <b>'+pct(hrsMesTot/cargaMesTot)+'</b> (meta 3%) — '+rotAbs(classeAbs(hrsMesTot/cargaMesTot))
+    : '';
+
+  $('relatorio').innerHTML =
+    '<div class="rel-conf">🔒 Confidencial — Uso interno · Departamento Pessoal</div>'+
+    '<div class="rel-conf-fixo">Confidencial — uso interno · Patrimar Móveis</div>'+
+    '<div class="rel-cab"><img src="'+logo+'" alt="Patrimar Móveis">'+
+      '<div class="rel-tit"><h1>Ausências do Dia por Setor</h1>'+
+      '<div class="sub">'+esc(diaLongo)+' · gerado em '+new Date().toLocaleDateString('pt-BR')+' às '+new Date().toLocaleTimeString('pt-BR').slice(0,5)+'</div></div></div>'+
+    (doDia.length
+      ? '<div class="rel-meta"><b>'+doDia.length+' ocorrência'+(doDia.length>1?'s':'')+'</b> em '+setoresDia.length+
+          ' setor'+(setoresDia.length>1?'es':'')+' · <b>'+(doDia.length-nProg)+'</b> exigem ação · <b>'+nProg+
+          '</b> programado (férias e banco de horas)'+absMesTxt+'</div>'+
+        '<div class="rel-sec"><h2>Quantidade por setor e tipo de ocorrência</h2>'+
+          '<table><thead>'+cab+'</thead><tbody>'+linhas+'</tbody><tfoot>'+rodapeTab+'</tfoot></table></div>'+
+        (motivos ? '<div class="rel-sec"><h2>Motivos informados no dia</h2><div class="obs">'+motivos+'</div></div>' : '')
+      : '<div class="rel-meta">Nenhuma ocorrência registrada nesta data.</div>')+
+    '<div class="rel-rodape"><b>Documento confidencial — uso interno. Não divulgar.</b><br>'+
+      'Sem identificação de colaboradores — apenas quantidades por setor.<br>'+
+      'Patrimar Móveis Ltda · Controle de Faltas e Ausências · '+esc($('topoArq').textContent)+'</div>';
+}
+
 function atualizarPrevDia(){
   const iso=$('mdData').value;
   $('mdPrev').textContent = iso ? textoDia(iso) : 'Escolha uma data.';
@@ -1606,6 +1676,12 @@ $('mdPrint').addEventListener('click', ()=>{
   if(!$('mdData').value) return;
   imprimindoDia = true;
   montarRelatorioDia($('mdData').value);
+  window.print();
+});
+$('mdPrintSetor').addEventListener('click', ()=>{
+  if(!$('mdData').value) return;
+  imprimindoDia = true;
+  montarRelatorioSetorDia($('mdData').value);
   window.print();
 });
 window.addEventListener('afterprint', ()=>{ imprimindoDia=false; });
@@ -1671,6 +1747,12 @@ function iniciar(){
     $('btnEnviarHoje2').addEventListener('click', ()=>{
       if(diaCardHoje) $('mdData').value = diaCardHoje;
       abrirModalDia();
+    });
+    $('btnImprimirSetor').addEventListener('click', ()=>{
+      if(!diaCardHoje) return;
+      imprimindoDia = true;
+      montarRelatorioSetorDia(diaCardHoje);
+      window.print();
     });
 
     $('btnLgpd').addEventListener('click', ()=>{

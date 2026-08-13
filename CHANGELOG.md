@@ -15,6 +15,15 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.7.0 — 13/08/2026
+
+Impressão por setor **sem nomes** — o papel que pode circular fora do DP.
+
+- Novo relatório A4 **"Ausências do Dia por Setor"**: só quantidades — setor × tipo de ocorrência, total e % do dia, com a linha "Total do dia" fechando cada coluna. Nenhum nome de colaborador aparece, e o rodapé deixa isso escrito ("Sem identificação de colaboradores — apenas quantidades por setor")
+- Fecha com **"Motivos informados no dia"** (ex.: Assuntos Pessoais (3) · Médico (3) · INSS (2)) — também sem ligar motivo a pessoa
+- Dois caminhos para chegar nele: botão **"🖨 Por setor (sem nomes)"** no quadro de resumo da aba Hoje (imprime o dia que está na tela) e no modal "📤 Faltas do dia", onde dá para escolher qualquer data
+- Corrigido: os números da linha "Total do dia" no resumo da tela apareciam desalinhados das colunas
+
 ## v2.6.0 — 13/08/2026
 
 Aba **Hoje** reorganizada — acabou o espaço vazio no meio e chegou o resumo por setor.
