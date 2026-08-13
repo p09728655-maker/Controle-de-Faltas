@@ -15,6 +15,10 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.5.1 — 13/08/2026
+
+- O aviso **"🔄 Nova versão disponível"** agora chega mesmo com o painel aberto direto: o app confere se saiu atualização a cada 30 minutos e também quando a aba volta a ficar visível (minimizou e voltou). Antes, só ao abrir/recarregar ou na checagem automática do navegador (~24h)
+
 ## v2.5.0 — 13/08/2026
 
 Nova aba **Hoje** — o dia inteiro na tela, setor por setor.
