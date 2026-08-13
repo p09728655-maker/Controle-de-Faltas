@@ -15,6 +15,16 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.4.1 — 13/08/2026
+
+Marcação de confidencialidade em tudo que sai do painel.
+
+- Faixa do topo dos relatórios impressos agora diz **"🔒 Confidencial — Uso interno · Departamento Pessoal"** (relatório do período e do dia)
+- Novo rodapé **"Confidencial — uso interno · Patrimar Móveis"** repetido em **todas as páginas** da impressão, não só na primeira
+- Rodapé dos relatórios ganhou o aviso **"Documento confidencial — uso interno. Não divulgar."**
+- Resumo do dia enviado por **WhatsApp, e-mail ou copiado** agora abre com "🔒 Confidencial — uso interno" e fecha com a mesma marcação; o assunto do e-mail sai como **[CONFIDENCIAL — uso interno]**
+- Aviso "Confidencial — uso interno" também nos rodapés das telas do painel e da tela de abertura
+
 ## v2.4.0 — 13/08/2026
 
 Absenteísmo batendo com a planilha + quadro "Quem faltou hoje".
