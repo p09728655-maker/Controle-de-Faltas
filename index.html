@@ -318,6 +318,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
       <button class="md-btn md-zap" id="mdZap">Enviar no WhatsApp</button>
       <button class="md-btn md-mail" id="mdMail">Enviar por e-mail</button>
       <button class="md-btn md-copiar" id="mdCopiar">Copiar texto</button>
+      <button class="md-btn md-copiar" id="mdPrint" title="Relatório A4 só deste dia, para imprimir ou salvar em PDF">🖨 Imprimir dia</button>
     </div>
   </div>
 </div>
@@ -548,7 +549,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.1.0';
+const VERSAO = '2.2.0';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -599,6 +600,13 @@ function montarDados(wb){
     });
   }
   if(!registros.length) throw new Error('A aba BASE não tem registros com DATA e COD preenchidos.');
+
+  /* horas que contam para falta/absenteísmo: exclui férias e afastamentos —
+     esses têm indicadores próprios em dias. Sem isso, um afastado o ano todo
+     "gera" 8,8h de falta por dia e estoura o absenteísmo do setor (>100%). */
+  registros.forEach(r=>{
+    r.hAbs = (r.afast>0 || r.ferias>0 || r.status==='AFASTADO' || r.status==='FÉRIAS' || r.status==='FERIAS') ? 0 : r.horas;
+  });
 
   /* HORAS CARGA */
   const carga = {};
@@ -830,7 +838,7 @@ function atualizarLeitura(R, tot){
 
   /* setor que mais perde horas */
   const porSetor={};
-  R.forEach(r=>{ porSetor[r.setor]=(porSetor[r.setor]||0)+r.horas; });
+  R.forEach(r=>{ porSetor[r.setor]=(porSetor[r.setor]||0)+r.hAbs; });
   const topSetor=Object.entries(porSetor).sort((a,b)=>b[1]-a[1])[0];
   if(topSetor && topSetor[1]>0 && !$('fSetor').value)
     F('Setor com mais horas de falta: <b>'+esc(topSetor[0])+'</b> ('+fmt(topSetor[1])+' h)', false,
@@ -838,7 +846,7 @@ function atualizarLeitura(R, tot){
 
   /* concentração em poucas pessoas */
   const porPessoa={};
-  R.forEach(r=>{ if(r.horas>0) porPessoa[r.nome]=(porPessoa[r.nome]||0)+r.horas; });
+  R.forEach(r=>{ if(r.hAbs>0) porPessoa[r.nome]=(porPessoa[r.nome]||0)+r.hAbs; });
   const hs=Object.values(porPessoa).sort((a,b)=>b-a);
   if(hs.length>3 && tot.hrs>0){
     let acum=0,n=0;
@@ -874,11 +882,11 @@ function render(){
 
   /* totais */
   const tot = {
-    hrs: R.reduce((s,r)=>s+r.horas,0),
+    hrs: R.reduce((s,r)=>s+r.hAbs,0),
     faltas: R.reduce((s,r)=>s+r.faltas,0),
     ferias: R.reduce((s,r)=>s+r.ferias,0),
     afast: R.reduce((s,r)=>s+r.afast,0),
-    pessoas: new Set(R.filter(r=>r.horas>0).map(r=>r.cod+'|'+r.nome)).size,
+    pessoas: new Set(R.filter(r=>r.hAbs>0).map(r=>r.cod+'|'+r.nome)).size,
     pessoasFerias: new Set(R.filter(r=>r.ferias>0).map(r=>r.cod+'|'+r.nome)).size
   };
   const cargaTot = stF.reduce((s,st)=>s+cargaPeriodo(st,ms),0);
@@ -900,7 +908,7 @@ function render(){
     ? 'Horas de falta ÷ carga · <span class="'+cAbs+'">'+rotAbs(cAbs).replace(/^./,c=>c.toUpperCase())+'</span> (meta ≤ 3%)'
     : 'Sem carga horária cadastrada para o filtro atual';
   $('kHrs').innerHTML = fmt(tot.hrs)+'<u>h</u>';
-  $('kHrsTxt').textContent = 'Horas não trabalhadas por falta em '+fmt(R.filter(r=>r.horas>0).length)+' registros';
+  $('kHrsTxt').textContent = 'Em '+fmt(R.filter(r=>r.hAbs>0).length)+' registros — exclui férias e afastamentos';
   $('kFaltas').textContent = fmt(tot.faltas,1);
   $('kPes').textContent = fmt(tot.pessoas);
   $('kPesTxt').textContent = 'Colaboradores diferentes com ao menos uma falta no período';
@@ -910,7 +918,7 @@ function render(){
 
   /* ---- QUANDO: mês a mês (só filtros de depto/setor/ocorrência/busca; todos os meses) ---- */
   const Rm = D.registros.filter(passaFiltrosSemMes);
-  const hrsMes = mesesComDados.map(m=>Rm.filter(r=>mesDe(r)===m).reduce((s,r)=>s+r.horas,0));
+  const hrsMes = mesesComDados.map(m=>Rm.filter(r=>mesDe(r)===m).reduce((s,r)=>s+r.hAbs,0));
   const cargaMes = mesesComDados.map(m=>stF.reduce((s,st)=>s+cargaPeriodo(st,[m]),0));
   const absMes = hrsMes.map((h,i)=>cargaMes[i]>0?h/cargaMes[i]*100:null);
   grafico('cMes',{
@@ -953,7 +961,7 @@ function render(){
   const porSetor = {};
   R.forEach(r=>{
     (porSetor[r.setor]=porSetor[r.setor]||{f:0,h:0,fe:0,af:0});
-    porSetor[r.setor].f+=r.faltas; porSetor[r.setor].h+=r.horas;
+    porSetor[r.setor].f+=r.faltas; porSetor[r.setor].h+=r.hAbs;
     porSetor[r.setor].fe+=r.ferias; porSetor[r.setor].af+=r.afast;
   });
   const comAbs = Object.entries(porSetor).map(([s,v])=>{
@@ -988,7 +996,12 @@ function render(){
       onClick:(e,els)=>{ if(els.length){ $('fSetor').value=rankSetor[els[0].index][0]; render(); } }}
   });
   const nSet=$('notaSetor');
-  if(rankSetor.length && tot.hrs>0 && modoSetor==='horas' && !$('fSetor').value){
+  const cargaSuspeita = comAbs.filter(([,,a])=>isFinite(a)&&a>1).map(([s])=>s);
+  if(cargaSuspeita.length){
+    nSet.style.display='block';
+    nSet.innerHTML='⚠ Absenteísmo acima de 100% em <b>'+cargaSuspeita.map(esc).join(', ')+
+      '</b> — as horas de falta superam a carga cadastrada. Confira a carga desse setor na aba <b>HORAS CARGA</b> da planilha.';
+  } else if(rankSetor.length && tot.hrs>0 && modoSetor==='horas' && !$('fSetor').value){
     const [s1,v1]=rankSetor[0];
     nSet.style.display='block';
     nSet.innerHTML='<b>'+esc(s1)+'</b> responde por <b>'+fmt(v1.h/tot.hrs*100,0)+'%</b> das horas de falta do período.';
@@ -1005,10 +1018,10 @@ function render(){
   /* ---- QUEM: top faltas ---- */
   const porColab={};
   R.forEach(r=>{
-    if(r.horas<=0) return;
+    if(r.hAbs<=0) return;
     const k=r.cod+'|'+r.nome;
     (porColab[k]=porColab[k]||{nome:r.nome,setor:r.setor,f:0,h:0});
-    porColab[k].f+=r.faltas; porColab[k].h+=r.horas;
+    porColab[k].f+=r.faltas; porColab[k].h+=r.hAbs;
   });
   const topC = Object.values(porColab).sort((a,b)=>b.h-a.h).slice(0,15);
   $('tbTop').innerHTML = topC.length ? topC.map((c,i)=>
@@ -1126,11 +1139,11 @@ function montarRelatorio(){
   const R = filtrar();
   const ms = mesesSelecionados();
   const stF = setoresDoFiltro();
-  const hrs = R.reduce((s,r)=>s+r.horas,0);
+  const hrs = R.reduce((s,r)=>s+r.hAbs,0);
   const faltas = R.reduce((s,r)=>s+r.faltas,0);
   const ferias = R.reduce((s,r)=>s+r.ferias,0);
   const afast = R.reduce((s,r)=>s+r.afast,0);
-  const pessoas = new Set(R.filter(r=>r.horas>0).map(r=>r.cod+'|'+r.nome)).size;
+  const pessoas = new Set(R.filter(r=>r.hAbs>0).map(r=>r.cod+'|'+r.nome)).size;
   const cargaTot = stF.reduce((s,st)=>s+cargaPeriodo(st,ms),0);
   const abs = cargaTot>0?hrs/cargaTot:NaN;
   const cAbs = classeAbs(abs);
@@ -1138,17 +1151,17 @@ function montarRelatorio(){
   const porSetor={};
   R.forEach(r=>{
     (porSetor[r.setor]=porSetor[r.setor]||{f:0,h:0,fe:0,af:0});
-    porSetor[r.setor].f+=r.faltas; porSetor[r.setor].h+=r.horas;
+    porSetor[r.setor].f+=r.faltas; porSetor[r.setor].h+=r.hAbs;
     porSetor[r.setor].fe+=r.ferias; porSetor[r.setor].af+=r.afast;
   });
   const setoresOrd = Object.entries(porSetor).filter(([,v])=>v.h>0||v.f>0||v.af>0).sort((a,b)=>b[1].h-a[1].h);
 
   const porColab={};
   R.forEach(r=>{
-    if(r.horas<=0) return;
+    if(r.hAbs<=0) return;
     const k=r.cod+'|'+r.nome;
     (porColab[k]=porColab[k]||{nome:r.nome,setor:r.setor,f:0,h:0});
-    porColab[k].f+=r.faltas; porColab[k].h+=r.horas;
+    porColab[k].f+=r.faltas; porColab[k].h+=r.hAbs;
   });
   const topC = Object.values(porColab).sort((a,b)=>b.h-a.h).slice(0,15);
 
@@ -1246,7 +1259,7 @@ function textoDia(iso){
   /* absenteísmo do mês do dia */
   const mes = d.getMonth()+1;
   const Rmes = D.registros.filter(r=>mesDe(r)===mes);
-  const hrsMesTot = Rmes.reduce((s,r)=>s+r.horas,0);
+  const hrsMesTot = Rmes.reduce((s,r)=>s+r.hAbs,0);
   const cargaMesTot = setores.reduce((s,st)=>s+cargaPeriodo(st,[mes]),0);
   if(cargaMesTot>0){
     const a=hrsMesTot/cargaMesTot;
@@ -1254,6 +1267,47 @@ function textoDia(iso){
   }
   txt+='\n\n_Gerado pelo painel Faltas e Ausências_';
   return txt;
+}
+
+/* relatório A4 de um dia específico */
+function montarRelatorioDia(iso){
+  const doDia = D.registros.filter(r=>r.data===iso);
+  const d = new Date(iso+'T12:00:00');
+  const diaLongo = d.toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+  const logo = document.querySelector('.topo .logo-chip img').src;
+
+  const porStatus={};
+  doDia.forEach(r=>{ (porStatus[r.status]=porStatus[r.status]||[]).push(r); });
+  const ordem=[...ORDEM_STATUS.filter(s=>porStatus[s]),
+               ...Object.keys(porStatus).filter(s=>!ORDEM_STATUS.includes(s)).sort()];
+  const resumo = ordem.map(s=>tCase(s)+' '+porStatus[s].length).join(' · ');
+
+  /* absenteísmo do mês do dia */
+  const mes = d.getMonth()+1;
+  const Rmes = D.registros.filter(r=>mesDe(r)===mes);
+  const hrsMesTot = Rmes.reduce((s,r)=>s+r.hAbs,0);
+  const cargaMesTot = setores.reduce((s,st)=>s+cargaPeriodo(st,[mes]),0);
+  const absMesTxt = cargaMesTot>0
+    ? 'Absenteísmo de '+MESES_LONGO[mes-1]+': <b>'+pct(hrsMesTot/cargaMesTot)+'</b> (meta 3%) — '+rotAbs(classeAbs(hrsMesTot/cargaMesTot))
+    : '';
+
+  const secoes = ordem.map(s=>{
+    const lista = porStatus[s].slice().sort((a,b)=>a.setor===b.setor?(a.nome<b.nome?-1:1):(a.setor<b.setor?-1:1));
+    return '<div class="rel-sec"><h2>'+esc(tCase(s))+' ('+lista.length+')</h2>'+
+      '<table><thead><tr><th>Colaborador</th><th>Setor</th><th>Departamento</th><th>Motivo</th></tr></thead><tbody>'+
+      lista.map(r=>'<tr><td>'+esc(tCase(mascararDia(r.nome)))+'</td><td>'+esc(limparSetor(r.setor))+'</td><td>'+esc(tCase(r.depto||'—'))+'</td><td>'+esc(r.motivo?tCase(r.motivo):'—')+'</td></tr>').join('')+
+      '</tbody></table></div>';
+  }).join('');
+
+  $('relatorio').innerHTML =
+    '<div class="rel-conf">Uso interno — Departamento Pessoal</div>'+
+    '<div class="rel-cab"><img src="'+logo+'" alt="Patrimar Móveis">'+
+      '<div class="rel-tit"><h1>Faltas do Dia</h1>'+
+      '<div class="sub">'+esc(diaLongo)+' · gerado em '+new Date().toLocaleDateString('pt-BR')+' às '+new Date().toLocaleTimeString('pt-BR').slice(0,5)+'</div></div></div>'+
+    (doDia.length
+      ? '<div class="rel-meta"><b>'+doDia.length+' ocorrência'+(doDia.length>1?'s':'')+':</b> '+esc(resumo)+(absMesTxt?' &nbsp;·&nbsp; '+absMesTxt:'')+'</div>'+secoes
+      : '<div class="rel-meta">Nenhuma ocorrência registrada nesta data.</div>')+
+    '<div class="rel-rodape">Patrimar Móveis Ltda · Controle de Faltas e Ausências · '+esc($('topoArq').textContent)+($('mdNomes').checked?'':' · nomes ocultos (LGPD)')+'</div>';
 }
 
 function atualizarPrevDia(){
@@ -1290,6 +1344,14 @@ $('mdCopiar').addEventListener('click', ()=>{
     setTimeout(()=>{ $('mdCopiar').textContent='Copiar texto'; }, 1600);
   });
 });
+let imprimindoDia = false;
+$('mdPrint').addEventListener('click', ()=>{
+  if(!$('mdData').value) return;
+  imprimindoDia = true;
+  montarRelatorioDia($('mdData').value);
+  window.print();
+});
+window.addEventListener('afterprint', ()=>{ imprimindoDia=false; });
 
 /* ================= NAVEGAÇÃO POR SEÇÕES ================= */
 const navLinks = document.querySelectorAll('.secnav a');
@@ -1348,7 +1410,8 @@ function iniciar(){
     });
     $('btnCsv').addEventListener('click', exportarCsv);
     $('btnImprimir').addEventListener('click', ()=>{ montarRelatorio(); window.print(); });
-    window.addEventListener('beforeprint', montarRelatorio);
+    /* Ctrl+P imprime o período — a menos que o relatório do dia esteja ativo */
+    window.addEventListener('beforeprint', ()=>{ if(!imprimindoDia) montarRelatorio(); });
 
     document.querySelectorAll('section[id]').forEach(s=>spy.observe(s));
   }
