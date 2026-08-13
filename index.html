@@ -213,6 +213,14 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 .pl-amber{background:rgba(245,166,35,.13);color:var(--amber)}
 .pl-gray{background:rgba(154,163,170,.12);color:var(--ink2)}
 .mais{text-align:center;padding:12px;color:var(--ink3);font-size:12.5px}
+
+/* ===== ABA HOJE — blocos por setor ===== */
+.hj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px;align-items:start}
+@media(max-width:640px){.hj-grid{grid-template-columns:1fr}}
+.hj-set{border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.hj-set h3{margin:0;padding:8px 12px;background:var(--surf2);border-bottom:1px solid var(--line);font-family:'Barlow Condensed',sans-serif;font-size:13.5px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--ink);display:flex;justify-content:space-between;align-items:center}
+.hj-set h3 .qt{color:var(--amber);font-size:12.5px}
+.hj-set thead th{position:static}
 .mais button{background:var(--surf2);border:1px solid var(--line);color:var(--ink2);border-radius:7px;padding:6px 16px;font-size:12.5px;font-weight:600;cursor:pointer}
 .mais button:hover{border-color:var(--amber);color:var(--amber)}
 .vazio{display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink3);font-size:13px;font-style:italic}
@@ -353,6 +361,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 
 <nav class="secnav" id="secnav" aria-label="Seções do painel">
   <a href="#sec-resumo" class="sel">Resumo</a>
+  <a href="#sec-hoje">Hoje</a>
   <a href="#sec-quando">Quando</a>
   <a href="#sec-onde">Onde</a>
   <a href="#sec-quem">Quem</a>
@@ -440,6 +449,20 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
       </table>
     </div>
     <div class="nota v" id="hojeVazio" style="display:none"></div>
+    <div class="nota i" id="hojeMais" style="display:none">Lista longa? A aba <a href="#sec-hoje" style="color:var(--amber)">Hoje</a> mostra o dia completo, setor por setor.</div>
+  </div>
+</section>
+
+<section id="sec-hoje" class="secao">
+  <div class="secao-cab"><span class="secao-tit">Hoje</span><span class="secao-sub">quem está ausente agora, setor por setor</span></div>
+  <div class="card">
+    <div class="card-cab">
+      <span class="ponto" style="background:var(--red)"></span><span class="card-tit">Ausências do dia por setor</span>
+      <div class="mini"><button id="btnEnviarHoje2" title="Abre o resumo deste dia para enviar por WhatsApp, e-mail ou imprimir">📤 Enviar este dia</button></div>
+    </div>
+    <div class="card-sub" id="hojeSetorSub">—</div>
+    <div id="hojeSetores"></div>
+    <div class="nota v" id="hojeSetorVazio" style="display:none"></div>
   </div>
 </section>
 
@@ -578,7 +601,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.4.1';
+const VERSAO = '2.5.0';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -1219,8 +1242,13 @@ function renderHoje(){
   if(!doDia.length){
     $('hojeSub').textContent = 'Hoje · '+rotDia;
     $('hojeWrap').style.display='none';
+    $('hojeMais').style.display='none';
     vazio.style.display='block';
     vazio.innerHTML='✅ Nenhuma ocorrência registrada até agora.';
+    $('hojeSetorSub').textContent = 'Hoje · '+rotDia;
+    $('hojeSetores').innerHTML='';
+    $('hojeSetorVazio').style.display='block';
+    $('hojeSetorVazio').innerHTML='✅ Nenhuma ocorrência registrada até agora.';
     return;
   }
 
@@ -1240,6 +1268,26 @@ function renderHoje(){
   $('tbHoje').innerHTML = orden.map(r=>
     '<tr><td class="forte">'+esc(tCase(mascarar(r.nome)))+'</td><td>'+esc(limparSetor(r.setor))+'</td>'+
     '<td>'+pillStatus(r.status)+'</td><td>'+esc(r.motivo?tCase(r.motivo):'—')+'</td></tr>').join('');
+  /* se a lista não cabe no card compacto, aponta para a aba Hoje */
+  $('hojeMais').style.display = doDia.length>8 ? 'block' : 'none';
+
+  /* ---- aba HOJE: mesmos registros, agrupados por setor ---- */
+  $('hojeSetorSub').textContent = $('hojeSub').textContent;
+  $('hojeSetorVazio').style.display='none';
+  const porSetor={};
+  doDia.forEach(r=>{ const s=limparSetor(r.setor); (porSetor[s]=porSetor[s]||[]).push(r); });
+  $('hojeSetores').innerHTML = '<div class="hj-grid">'+
+    Object.keys(porSetor).sort((a,b)=>porSetor[b].length-porSetor[a].length || a.localeCompare(b,'pt-BR')).map(s=>{
+      const lista = porSetor[s].slice().sort((a,b)=>{
+        const ia=ORDEM_STATUS.indexOf(a.status), ib=ORDEM_STATUS.indexOf(b.status);
+        return ((ia===-1?99:ia)-(ib===-1?99:ib)) || a.nome.localeCompare(b.nome,'pt-BR');
+      });
+      return '<div class="hj-set"><h3>'+esc(s)+'<span class="qt">'+lista.length+'</span></h3>'+
+        '<table><tbody>'+
+        lista.map(r=>'<tr><td class="forte">'+esc(tCase(mascarar(r.nome)))+'</td>'+
+          '<td>'+pillStatus(r.status)+'</td><td>'+esc(r.motivo?tCase(r.motivo):'—')+'</td></tr>').join('')+
+        '</tbody></table></div>';
+    }).join('')+'</div>';
 }
 
 /* ================= TABELA DE LANÇAMENTOS ================= */
@@ -1583,10 +1631,12 @@ function iniciar(){
       });
     });
 
-    $('btnEnviarHoje').addEventListener('click', ()=>{
+    const enviarDiaDoCard = ()=>{
       if(diaCardHoje) $('mdData').value = diaCardHoje;
       abrirModalDia();
-    });
+    };
+    $('btnEnviarHoje').addEventListener('click', enviarDiaDoCard);
+    $('btnEnviarHoje2').addEventListener('click', enviarDiaDoCard);
 
     $('btnLgpd').addEventListener('click', ()=>{
       lgpd=!lgpd;

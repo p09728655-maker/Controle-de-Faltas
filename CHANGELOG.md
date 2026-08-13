@@ -15,6 +15,15 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.5.0 — 13/08/2026
+
+Nova aba **Hoje** — o dia inteiro na tela, setor por setor.
+
+- Nova aba **Hoje** na navegação: mostra todas as ausências do dia agrupadas por setor, em blocos lado a lado — sem rolagem interna, dá para ver o dia completo de uma vez. Setores com mais ocorrências aparecem primeiro, e cada bloco traz colaborador, ocorrência e motivo
+- O botão "📤 Enviar este dia" também está na aba Hoje
+- O quadro "Quem faltou hoje" do Resumo continua compacto; quando a lista não cabe, aparece um aviso com atalho para a aba Hoje
+- Respeita o botão "Nomes ocultos" como o resto do painel
+
 ## v2.4.1 — 13/08/2026
 
 Marcação de confidencialidade em tudo que sai do painel.
