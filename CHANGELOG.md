@@ -15,6 +15,16 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.1.0 — 13/08/2026
+
+Novo layout do resumo **📤 Faltas do dia** para WhatsApp.
+
+- Agrupado por tipo de ocorrência com contagem em cada bloco — faltas primeiro, férias por último (antes era por departamento, com tudo misturado)
+- Nomes e setores em maiúsculas/minúsculas em vez de CAIXA ALTA
+- Setor sem o prefixo numérico ("14-ALMOXARIFADO" → "Almoxarifado")
+- Emoji por tipo de ocorrência (❌ falta, 🏥 atestado, ⏰ atraso, 🚑 afastado, 🏖️ férias) e motivo em itálico
+- Removido o emoji do título que aparecia como "�" em alguns aparelhos
+
 ## v2.0.0 — 13/08/2026
 
 Refatoração completa no padrão do dashboard de atestados.
