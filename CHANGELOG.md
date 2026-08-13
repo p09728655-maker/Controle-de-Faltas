@@ -15,6 +15,15 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.9.0 — 13/08/2026
+
+O envio pelo WhatsApp da aba Hoje virou **o mesmo conteúdo do PDF por setor**.
+
+- O botão da aba Hoje agora é **"💬 Por setor no WhatsApp"** e manda a versão **sem nomes** — igualzinha ao relatório A4 "Ausências do Dia por Setor" impresso pelo botão ao lado: total de ocorrências, quantos exigem ação e quantos são programados, a lista de setores com total, % do dia e composição por tipo de ocorrência, e os motivos informados no dia
+- Como não sai nome de ninguém, **pode circular fora do DP** (produção, diretoria, grupo de gestores) sem passar por cima da LGPD — o rodapé da mensagem diz isso: "_Sem identificação de colaboradores — apenas quantidades por setor._"
+- Setor com um tipo só de ocorrência sai em **uma linha** ("Faturamento — 1 (4,8%) · 🏖️ 1 Férias"); com mais de um, a composição vem na linha de baixo
+- A lista **com nomes** continua saindo pelo botão "📤 Faltas do dia" do topo, onde também dá para escolher outra data
+
 ## v2.8.0 — 13/08/2026
 
 Envio direto pelo WhatsApp na aba **Hoje**, com o texto redesenhado.

@@ -472,7 +472,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
       <span class="ponto" style="background:var(--red)"></span><span class="card-tit">Resumo do dia por setor</span>
       <div class="mini">
         <button id="btnImprimirSetor" title="Imprime só as quantidades por setor — sem nomes, pode circular fora do DP">🖨 Por setor (sem nomes)</button>
-        <button id="btnZapHoje" class="zap" title="Abre o WhatsApp já com o resumo deste dia pronto para enviar — usa os nomes como estão na tela (LGPD)">💬 Enviar no WhatsApp</button>
+        <button id="btnZapHoje" class="zap" title="Abre o WhatsApp já com o resumo por setor deste dia — só quantidades, sem nomes, pode circular fora do DP">💬 Por setor no WhatsApp</button>
       </div>
     </div>
     <div class="card-sub" id="hojeSetorSub">—</div>
@@ -624,7 +624,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.8.0';
+const VERSAO = '2.9.0';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -1557,15 +1557,72 @@ function textoDia(iso, comNomes){
   txt += '\n'+LINHA_ZAP+'\n🏭 *POR SETOR*\n'+
     setoresDia.map(s=>s+' *'+porSetor[s]+'*').join(' · ')+'\n';
 
-  /* absenteísmo do mês do dia */
+  return txt+absMesZap(d)+rodape;
+}
+
+/* Mesmo conteúdo do relatório A4 "Ausências do Dia por Setor": só quantidades,
+   sem nome de ninguém — é o texto que pode circular fora do DP. */
+function textoDiaSetor(iso){
+  const doDia = D.registros.filter(r=>r.data===iso);
+  const d = new Date(iso+'T12:00:00');
+  const diaSemana = tCase(d.toLocaleDateString('pt-BR',{weekday:'long'}));
+
+  const cab = '🏭 *AUSÊNCIAS DO DIA POR SETOR*\n'+
+              '📅 '+diaSemana+', '+dataBR(iso)+'\n'+
+              '🏭 Patrimar Móveis · Depto. Pessoal\n';
+  const rodape = '\n'+LINHA_ZAP+'\n'+
+                 '🔒 _Confidencial — uso interno. Não divulgar._\n'+
+                 '_Sem identificação de colaboradores — apenas quantidades por setor._';
+
+  if(!doDia.length)
+    return cab+LINHA_ZAP+'\n✅ *Nenhuma ocorrência registrada nesta data.*\n'+rodape;
+
+  const porStatus={}, porSetor={}, porMotivo={};
+  doDia.forEach(r=>{
+    porStatus[r.status]=(porStatus[r.status]||0)+1;
+    const s=limparSetor(r.setor); (porSetor[s]=porSetor[s]||[]).push(r);
+    if(r.motivo){ const m=tCase(r.motivo); porMotivo[m]=(porMotivo[m]||0)+1; }
+  });
+  const ordem=[...ORDEM_STATUS.filter(s=>porStatus[s]),
+               ...Object.keys(porStatus).filter(s=>!ORDEM_STATUS.includes(s)).sort()];
+  const setoresDia = Object.keys(porSetor)
+    .sort((a,b)=>porSetor[b].length-porSetor[a].length || a.localeCompare(b,'pt-BR'));
+  const nProg = ordem.filter(s=>PROGRAMADO.includes(s)).reduce((t,s)=>t+porStatus[s],0);
+  const nAcao = doDia.length-nProg;
+
+  let txt = cab+LINHA_ZAP+'\n'+
+    '📋 *'+doDia.length+'* ocorrência'+(doDia.length>1?'s':'')+' em '+setoresDia.length+
+      ' setor'+(setoresDia.length>1?'es':'')+'\n'+
+    '⚠️ *'+nAcao+'* exige'+(nAcao>1?'m':'')+' ação · 🗓️ *'+nProg+'* programado\n'+
+    ordem.map(s=>(EMOJI_STATUS[s]||'▪')+' '+tCase(s)+' *'+porStatus[s]+'*').join(' · ')+'\n';
+
+  /* uma linha por setor, como a tabela do PDF: setor, total, % do dia e a composição.
+     Com um tipo só, a composição cabe na mesma linha — não vale gastar duas. */
+  txt += '\n'+LINHA_ZAP+'\n🏭 *POR SETOR*\n';
+  setoresDia.forEach(s=>{
+    const c={}; porSetor[s].forEach(r=>{ c[r.status]=(c[r.status]||0)+1; });
+    const tipos = ordem.filter(st=>c[st]);
+    const comp = tipos.map(st=>(EMOJI_STATUS[st]||'▪')+' '+c[st]+' '+tCase(st)).join(' · ');
+    txt += '\n*'+s+'* — *'+porSetor[s].length+'* _('+fmt(porSetor[s].length/doDia.length*100,1)+'%)_'+
+           (tipos.length===1 ? ' · '+comp : '\n'+comp)+'\n';
+  });
+
+  const motivos = Object.keys(porMotivo)
+    .sort((a,b)=>porMotivo[b]-porMotivo[a] || a.localeCompare(b,'pt-BR'))
+    .map(m=>m+' ('+porMotivo[m]+')').join(' · ');
+  if(motivos) txt += '\n'+LINHA_ZAP+'\n💬 *MOTIVOS INFORMADOS NO DIA*\n'+motivos+'\n';
+
+  return txt+absMesZap(d)+rodape;
+}
+
+/* absenteísmo do mês do dia — mesma conta dos relatórios impressos */
+function absMesZap(d){
   const mes = d.getMonth()+1;
   const hrsMesTot = D.registros.filter(r=>mesDe(r)===mes).reduce((s,r)=>s+hDe(r),0);
   const cargaMesTot = setores.reduce((s,st)=>s+cargaPeriodo(st,[mes]),0);
-  if(cargaMesTot>0){
-    const a=hrsMesTot/cargaMesTot;
-    txt+='\n📉 Absenteísmo de '+MESES_LONGO[mes-1]+': *'+pct(a)+'* (meta 3%) — '+rotAbs(classeAbs(a))+'\n';
-  }
-  return txt+rodape;
+  if(!(cargaMesTot>0)) return '';
+  const a = hrsMesTot/cargaMesTot;
+  return '\n📉 Absenteísmo de '+MESES_LONGO[mes-1]+': *'+pct(a)+'* (meta 3%) — '+rotAbs(classeAbs(a))+'\n';
 }
 
 /* abre o WhatsApp já com o texto do dia — celular abre o app, computador abre o WhatsApp Web */
@@ -1799,8 +1856,9 @@ function iniciar(){
 
     $('btnZapHoje').addEventListener('click', ()=>{
       if(!diaCardHoje) return;
-      /* segue os nomes como estão na tela: com o topo em "Nomes ocultos", o texto vai abreviado */
-      enviarZap(textoDia(diaCardHoje, !lgpd));
+      /* mesmo conteúdo do "Por setor (sem nomes)" ao lado: só quantidades.
+         A lista com nomes sai pelo modal "📤 Faltas do dia", no topo. */
+      enviarZap(textoDiaSetor(diaCardHoje));
       const b=$('btnZapHoje'), rot=b.textContent;
       b.textContent='💬 Abrindo o WhatsApp…';
       setTimeout(()=>{ b.textContent=rot; }, 2200);
