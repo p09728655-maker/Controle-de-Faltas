@@ -15,6 +15,10 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.4.2 — 13/08/2026
+
+- O quadro **"Quem faltou hoje"** agora mostra a lista completa do dia na tela, sem cortar em ~8 linhas com rolagem interna (removida a altura máxima de 320px)
+
 ## v2.4.1 — 13/08/2026
 
 Marcação de confidencialidade em tudo que sai do painel.

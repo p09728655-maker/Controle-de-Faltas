@@ -433,7 +433,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
       <div class="mini"><button id="btnEnviarHoje" title="Abre o resumo deste dia para enviar por WhatsApp, e-mail ou imprimir">📤 Enviar este dia</button></div>
     </div>
     <div class="card-sub" id="hojeSub">—</div>
-    <div class="tab-wrap" style="max-height:320px" id="hojeWrap">
+    <div class="tab-wrap" style="max-height:none" id="hojeWrap">
       <table>
         <thead><tr><th>Colaborador</th><th>Setor</th><th>Ocorrência</th><th>Motivo</th></tr></thead>
         <tbody id="tbHoje"></tbody>
@@ -578,7 +578,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.4.1';
+const VERSAO = '2.4.2';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
