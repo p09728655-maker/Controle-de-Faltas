@@ -1,5 +1,8 @@
-/* Service worker — cache para uso offline (app + bibliotecas do CDN) */
-const CACHE = 'faltas-patrimar-v2';
+/* Service worker — cache para uso offline (app + bibliotecas do CDN)
+   Ao publicar uma atualização, mude a versão abaixo junto com a constante
+   VERSAO do index.html e registre no CHANGELOG.md. A troca do nome do cache
+   dispara o aviso "Nova versão disponível" para quem já usa o painel. */
+const CACHE = 'faltas-patrimar-v2.0.0';
 const ARQUIVOS = [
   './',
   './index.html',

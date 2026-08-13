@@ -10,6 +10,7 @@ Lê a planilha `CONTROLE_FALTAS_2026.xlsx` direto no navegador — **nenhum dado
 | `index.html` | O painel completo (autocontido) |
 | `manifest.json` | Configuração do PWA (instalar como app) |
 | `sw.js` | Cache offline (app + bibliotecas) |
+| `CHANGELOG.md` | Histórico de versões e como publicar atualizações |
 | `icone-192.png` / `icone-512.png` | Ícones do app |
 | `vercel.json` | Configuração do deploy |
 
@@ -47,3 +48,9 @@ Depois, no Vercel: **Add New → Project → importar o repositório `controle-f
 ## Atualização mensal
 
 Não precisa mexer no site: o DP abre o painel e carrega a planilha atualizada. Só é preciso novo deploy se o **layout** mudar.
+
+## Versões e atualizações do painel
+
+A versão atual aparece no rodapé (ex.: `v2.0.0`). Quando uma nova versão é publicada, quem já usa o painel vê o aviso **"🔄 Nova versão disponível — Atualizar agora"** na visita seguinte — sem perder a planilha aberta.
+
+Para publicar uma atualização, siga o passo a passo do [`CHANGELOG.md`](CHANGELOG.md) (mudar `VERSAO` no `index.html`, o cache no `sw.js` e registrar a mudança).

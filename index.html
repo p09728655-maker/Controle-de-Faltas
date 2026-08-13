@@ -214,6 +214,13 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 
 /* ===== RODAPÉ ===== */
 .rodape{border-top:1px solid var(--line);background:var(--surf);padding:12px 18px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink3)}
+.rodape #versao{color:var(--amber);font-weight:600;font-size:11.5px}
+
+/* ===== TOAST NOVA VERSÃO ===== */
+.toast-versao{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:500;background:var(--surf2);border:1px solid var(--amber);border-radius:10px;padding:11px 16px;font-size:13.5px;color:var(--ink);display:flex;align-items:center;gap:12px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.toast-versao button{background:var(--amber);color:#141414;border:none;border-radius:7px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer}
+.toast-versao #tvDepois{background:0 0;color:var(--ink3);font-size:17px;padding:0 4px}
+.toast-versao #tvDepois:hover{color:var(--ink)}
 .marca{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:#db2126;letter-spacing:1.6px}
 
 @media(max-width:640px){
@@ -283,7 +290,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
   <input type="file" id="inputArq" accept=".xlsx,.xlsm">
   <div class="erro-imp" id="erroImp"></div>
   <button class="btn-instalar" id="btnInstalarImp" hidden>📲 Baixar como aplicativo</button>
-  <div class="rodape-imp">Patrimar Móveis Ltda — Depto. Pessoal</div>
+  <div class="rodape-imp">Patrimar Móveis Ltda — Depto. Pessoal · <span id="versaoImp"></span></div>
 </div>
 
 <div id="modalInstalar" role="dialog" aria-modal="true" aria-labelledby="miTit">
@@ -527,7 +534,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 </div>
 
 <div class="rodape">
-  <span>Patrimar Móveis Ltda · Controle de Faltas e Ausências</span>
+  <span>Patrimar Móveis Ltda · Controle de Faltas e Ausências · <b class="mono" id="versao"></b></span>
   <span id="rodapeBase"></span>
   <span><span class="marca">PATRIMAR MÓVEIS</span> © 2026</span>
 </div>
@@ -537,6 +544,12 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 <div id="relatorio"></div>
 
 <script>
+/* ================= VERSÃO =================
+   Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
+   3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
+   e recebe o aviso "Nova versão disponível" na próxima visita. */
+const VERSAO = '2.0.0';
+
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
 
@@ -1358,8 +1371,32 @@ if(!window.matchMedia('(display-mode: standalone)').matches && !navigator.standa
   /* sem beforeinstallprompt (iOS/Safari): mostra o botão com instruções */
   setTimeout(()=>{ if(!promptInstalar) $('btnInstalarImp').hidden=false; }, 1500);
 }
+/* versão visível nos rodapés */
+$('versao').textContent = 'v'+VERSAO;
+$('versaoImp').textContent = 'v'+VERSAO;
+
+/* aviso de nova versão: quando o service worker baixa uma atualização,
+   mostra o toast — o usuário recarrega quando quiser (não perde a planilha aberta) */
+function avisarNovaVersao(){
+  if($('toastVersao')) return;
+  const t=document.createElement('div');
+  t.id='toastVersao';
+  t.className='toast-versao';
+  t.innerHTML='🔄 Nova versão do painel disponível. <button id="tvAtualizar">Atualizar agora</button><button id="tvDepois" title="Fechar">×</button>';
+  document.body.appendChild(t);
+  t.querySelector('#tvAtualizar').addEventListener('click', ()=>location.reload());
+  t.querySelector('#tvDepois').addEventListener('click', ()=>t.remove());
+}
 if('serviceWorker' in navigator && location.protocol==='https:'){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
+  navigator.serviceWorker.register('sw.js').then(reg=>{
+    reg.addEventListener('updatefound', ()=>{
+      const nw=reg.installing;
+      if(!nw) return;
+      nw.addEventListener('statechange', ()=>{
+        if(nw.state==='installed' && navigator.serviceWorker.controller) avisarNovaVersao();
+      });
+    });
+  }).catch(()=>{});
 }
 </script>
 </body>
