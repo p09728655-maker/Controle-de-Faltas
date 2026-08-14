@@ -349,7 +349,13 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 /* nome do setor quebra só no espaço — nada de "Embalag/em" para caber a coluna —
    e a coluna se ajusta ao nome, em vez de ficar com a sobra da folha inteira */
 #relatorio .rel-st th,#relatorio .rel-st td:first-child{word-break:normal;overflow-wrap:normal}
-#relatorio .rel-st td:first-child,#relatorio .rel-st th:first-child{width:1%}
+/* setor e números ocupam só o que precisam — o nome não quebra em duas linhas —
+   e a barra de composição fica com a sobra da folha, como na tela */
+#relatorio .rel-st td:first-child,#relatorio .rel-st th:first-child{width:1%;white-space:nowrap}
+#relatorio .rel-st td.n,#relatorio .rel-st th.n{width:1%}
+#relatorio .rel-st td.rel-comp,#relatorio .rel-st th:last-child{width:auto;min-width:22mm;padding-left:5mm}
+#relatorio .rel-bar{display:flex;height:2.4mm;border-radius:1.2mm;overflow:hidden;background:#eee}
+#relatorio .rel-bar i{display:block;height:100%}
 #relatorio .rel-st.compacta{font-size:7.5pt}
 #relatorio .rel-st.compacta th{font-size:7pt;padding:4px 5px}
 #relatorio .rel-st.compacta td{padding:3px 5px}
@@ -682,7 +688,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.12.0';
+const VERSAO = '2.12.1';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -1608,22 +1614,29 @@ function tabelaSetorTipo(R, rotuloTotal, rotuloPct){
     .sort((a,b)=>porSetor[b].length-porSetor[a].length || a.localeCompare(b,'pt-BR'));
   const cel = (q,h)=> q ? q+(h>0?' <span class="h">'+hTxt(h)+'</span>':'') : '—';
 
+  /* de 7 tipos de ocorrência para cima a tabela só fecha no A4 com a fonte menor,
+     e aí a barra de composição sai de cena para não roubar espaço dos números */
+  const compacta = ordem.length>=7;
+  const barra = c=>!compacta ? '<td class="rel-comp"><span class="rel-bar">'+
+    ordem.filter(st=>c[st]).map(st=>'<i style="flex:'+c[st]+';background:'+corStatus(st)+'"></i>').join('')+
+    '</span></td>' : '';
+
   const cab = '<tr><th>Setor</th>'+ordem.map(s=>'<th class="n">'+esc(tCase(s))+'</th>').join('')+
-              '<th class="n">Total</th><th class="n">'+esc(rotuloPct||'% do total')+'</th></tr>';
+              '<th class="n">Total</th><th class="n">'+esc(rotuloPct||'% do total')+'</th>'+
+              (compacta?'':'<th>Composição</th>')+'</tr>';
   const linhas = setoresR.map(s=>{
     const c={}, hc={};
     porSetor[s].forEach(r=>{ c[r.status]=(c[r.status]||0)+1; hc[r.status]=(hc[r.status]||0)+horasDe(r); });
     return '<tr><td class="destaque">'+esc(s)+'</td>'+
       ordem.map(st=>'<td class="n'+(c[st]?'':' z')+'">'+cel(c[st],hc[st])+'</td>').join('')+
       '<td class="n destaque">'+cel(porSetor[s].length, somaHoras(porSetor[s]))+'</td>'+
-      '<td class="n">'+fmt(porSetor[s].length/R.length*100,1)+'%</td></tr>';
+      '<td class="n">'+fmt(porSetor[s].length/R.length*100,1)+'%</td>'+barra(c)+'</tr>';
   }).join('');
   const rodapeTab = '<tr><td>'+esc(rotuloTotal)+'</td>'+
     ordem.map(s=>'<td class="n">'+cel(porStatus[s],hrsStatus[s])+'</td>').join('')+
-    '<td class="n">'+cel(R.length, somaHoras(R))+'</td><td class="n">100,0%</td></tr>';
+    '<td class="n">'+cel(R.length, somaHoras(R))+'</td><td class="n">100,0%</td>'+barra(porStatus)+'</tr>';
 
-  /* de 7 tipos de ocorrência para cima a tabela só fecha no A4 com a fonte menor */
-  return '<table class="rel-st'+(ordem.length>=7?' compacta':'')+'"><thead>'+cab+'</thead><tbody>'+
+  return '<table class="rel-st'+(compacta?' compacta':'')+'"><thead>'+cab+'</thead><tbody>'+
     linhas+'</tbody><tfoot>'+rodapeTab+'</tfoot></table>';
 }
 
