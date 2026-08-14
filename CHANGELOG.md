@@ -15,6 +15,27 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.12.0 — 14/08/2026
+
+Impressão só do quadro por setor, coluna de setor ajustada e a tabela larga cabendo no A4.
+
+### Botão "Imprimir este quadro"
+
+- O quadro **"Por setor e tipo de ocorrência"** da aba Onde ganhou botão próprio: sai um A4 só com ele — cabeçalho, filtros, o resumo do período (lançamentos, o que exigiu ação, o que foi programado, horas e absenteísmo), a tabela e os motivos informados
+- Como não sai nome de ninguém, **pode circular fora do DP**, igual ao "Por setor (sem nomes)" do dia
+- Quando o período tem **6 tipos de ocorrência ou mais**, a folha sai **deitada** sozinha — é o que segura a tabela larga sem espremer os números
+
+### A coluna do setor se ajusta ao nome
+
+- A coluna de setor era fixa em 26% da largura. Com 10 tipos de ocorrência sobrava espaço nela e faltava nos números, abrindo um vão no meio da linha. Agora ela se ajusta ao nome mais longo e a **barra de composição toma a sobra**: com poucos tipos a barra fica larga, com muitos ela cede espaço para os números
+- Vale para a tela e para o papel
+- De **7 tipos de ocorrência para cima**, a tabela impressa entra em modo compacto (fonte e espaçamento menores) — é o que faz o mês inteiro caber na folha em pé
+
+### Rodapé de cada folha
+
+- A tarja "Confidencial — uso interno" virou **rodapé de tabela** (`tfoot`), que o navegador repete em toda página **e cujo espaço ele reserva**. Antes era `position:fixed`, que não reserva altura: quando a tabela chegava no pé da página, a última linha saía por baixo da tarja
+- Conferido em A4 retrato e paisagem, com 25 setores e 10 tipos de ocorrência: nenhuma linha cortada e a tarja em todas as folhas
+
 ## v2.11.0 — 14/08/2026
 
 O resumo por setor ficou compacto e ganhou uma versão **do período**, na tela e na impressão.

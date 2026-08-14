@@ -234,9 +234,10 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Linha baixa de propósito: com 12 setores, cada pixel a mais vira uma tela a mais. */
 .hj-res td,.hj-res th{padding:4px 10px}
 .hj-res td.z{color:var(--ink3)}
-/* as colunas de número ficam juntas, logo depois do setor, e a barra de composição
-   toma a sobra — em tela larga não abre buraco no meio da linha */
-.hj-res th:first-child,.hj-res td:first-child{width:26%}
+/* a coluna de setor se ajusta ao nome mais longo e a barra de composição toma a
+   sobra: com 4 tipos de ocorrência a barra fica larga, com 10 ela cede espaço para
+   os números — em nenhum dos casos abre um vão no meio da linha */
+.hj-res th:first-child,.hj-res td:first-child{width:1%;white-space:nowrap;padding-right:18px}
 .hj-res th.n,.hj-res td.n{width:1%;white-space:nowrap}
 .hj-res th:last-child,.hj-res td:last-child{width:auto;min-width:90px;padding-left:16px}
 .hj-res tfoot td{position:sticky;bottom:0;background:var(--surf2);color:var(--ink);font-weight:600;border-top:1px solid var(--line2);border-bottom:0}
@@ -288,17 +289,26 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 /* ===== RELATÓRIO DE IMPRESSÃO ===== */
 #relatorio{display:none}
 @media print{
-  @page{margin:12mm 12mm 22mm}
+  @page{margin:12mm 12mm 14mm}
   :root{color-scheme:light!important}
   html{background:#fff!important}
   body{width:auto!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important;background:#fff!important;color:#1f2328!important;font-family:Calibri,Barlow,Arial,sans-serif;font-size:10.5pt}
   #app,#carregando,#telaImport,#modalInstalar,#modalDia,.toast-versao{display:none!important}
   #relatorio{display:block!important;width:100%!important;max-width:100%!important}
   #relatorio,#relatorio *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box}
-  /* repete em TODA página impressa, não só na primeira */
-  .rel-conf-fixo{display:block!important;position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:7.5pt;font-weight:700;color:#a8140f;letter-spacing:1.8px;text-transform:uppercase;background:#fff;padding:1.5mm 0 0}
+  /* A tarja de cada folha é o <tfoot> da tabela que embrulha o relatório: o
+     navegador repete o rodapé em TODA página E reserva a altura dele. Com
+     position:fixed a tarja passava por cima da última linha da página, e jogá-la
+     para dentro da margem não resolve — o que passa da área de conteúdo é
+     recortado e a tarja some da folha.
+     O seletor precisa do #relatorio para vencer a regra de tfoot das tabelas
+     de dados logo abaixo, senão o rodapé vira uma linha comum no topo. */
+  #relatorio .rel-pag>tfoot{display:table-footer-group!important}
+  .rel-conf-pag{display:block!important}
 }
-.rel-conf-fixo{display:none}
+.rel-pag{width:100%;table-layout:fixed;border-collapse:collapse}
+#relatorio .rel-pag>tbody>tr>td,#relatorio .rel-pag>tfoot>tr>td{padding:0;border:0;background:0 0;white-space:normal}
+.rel-conf-pag{display:none;text-align:center;font-size:7.5pt;font-weight:700;color:#a8140f;letter-spacing:1.8px;text-transform:uppercase;padding:3mm 0 0}
 
 #relatorio{color:#1f2328;font-family:Calibri,Barlow,Arial,sans-serif;max-width:100%}
 #relatorio *{max-width:100%}
@@ -324,7 +334,8 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 .rel-sec{margin-bottom:14px;break-inside:auto}
 .rel-sec h2{font-size:12pt;font-weight:700;color:#a8140f;border-bottom:1.5px solid #db2126;padding-bottom:3px;margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px;break-after:avoid}
 #relatorio tr{break-inside:avoid}
-#relatorio thead{display:table-header-group}   /* cabeçalho se repete na página seguinte */
+#relatorio thead{display:table-header-group;break-after:avoid}   /* repete na página seguinte e nunca fica sozinho no pé */
+.rel-sec .obs{break-after:avoid}
 #relatorio tfoot{display:table-row-group}      /* o total sai uma vez só, no fim da tabela */
 .rel-kpis,.rel-leitura,.rel-meta{break-inside:avoid}
 .rel-sec h2 .hh{text-transform:none}   /* 8,8h não vira 8,8H no título da seção */
@@ -335,8 +346,14 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 #relatorio td .h{color:#777;font-size:8pt}   /* horas ao lado da quantidade, na mesma célula */
 #relatorio tfoot td .h{color:#5c5c5c}
 #relatorio td.n{white-space:nowrap}          /* "12 89,6h" não quebra no meio */
-/* nome do setor quebra só no espaço — nada de "Embalag/em" para caber a coluna */
-#relatorio .rel-st td:first-child,#relatorio .rel-st th:first-child{word-break:normal;overflow-wrap:normal}
+/* nome do setor quebra só no espaço — nada de "Embalag/em" para caber a coluna —
+   e a coluna se ajusta ao nome, em vez de ficar com a sobra da folha inteira */
+#relatorio .rel-st th,#relatorio .rel-st td:first-child{word-break:normal;overflow-wrap:normal}
+#relatorio .rel-st td:first-child,#relatorio .rel-st th:first-child{width:1%}
+#relatorio .rel-st.compacta{font-size:7.5pt}
+#relatorio .rel-st.compacta th{font-size:7pt;padding:4px 5px}
+#relatorio .rel-st.compacta td{padding:3px 5px}
+#relatorio .rel-st.compacta td .h{font-size:6.5pt}
 #relatorio td{padding:4px 7px;border-bottom:1px solid #e4e4e4;color:#333;white-space:normal;word-break:break-word;overflow-wrap:anywhere}
 #relatorio tbody tr:nth-child(2n) td{background:#faf7ef}
 #relatorio td.destaque{font-weight:700;color:#a8140f}
@@ -567,6 +584,9 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
   <div class="card" style="margin-top:12px">
     <div class="card-cab">
       <span class="ponto" style="background:var(--violet)"></span><span class="card-tit">Por setor e tipo de ocorrência</span>
+      <div class="mini">
+        <button id="btnImprimirPeriodo" title="Imprime só este quadro em A4 — quantidades e horas por setor, sem nome de ninguém">🖨 Imprimir este quadro</button>
+      </div>
     </div>
     <div class="card-sub" id="setorTipoSub">—</div>
     <div id="setorTipoTab"></div>
@@ -662,7 +682,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.11.0';
+const VERSAO = '2.12.0';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -1555,9 +1575,20 @@ function exportarCsv(){
 
 /* Todo relatório sai por aqui: a tarja de confidencial repetida em cada folha
    entra uma vez só, no lugar de estar copiada nos três relatórios. */
+/* Alguns relatórios só cabem deitados: a tabela por tipo de ocorrência passa de
+   dez colunas quando o mês tem falta, atestado, atraso, afastado, just., banco de
+   horas, férias, atestado de obrigação, licença maternidade e tarde. */
+function orientacaoImpressao(paisagem){
+  let st = $('pgOrientacao');
+  if(!st){ st=document.createElement('style'); st.id='pgOrientacao'; document.head.appendChild(st); }
+  st.textContent = paisagem ? '@page{size:A4 landscape;margin:12mm 12mm 14mm}' : '';
+}
+
 function publicarRelatorio(html){
   $('relatorio').innerHTML =
-    '<div class="rel-conf-fixo">Confidencial — uso interno · Patrimar Móveis</div>'+html;
+    '<table class="rel-pag"><tbody><tr><td>'+html+'</td></tr></tbody>'+
+    '<tfoot><tr><td><div class="rel-conf-pag">Confidencial — uso interno · Patrimar Móveis</div>'+
+    '</td></tr></tfoot></table>';
 }
 
 /* Tabela "quantidade e horas por setor e tipo de ocorrência" — a mesma nos dois
@@ -1591,12 +1622,15 @@ function tabelaSetorTipo(R, rotuloTotal, rotuloPct){
     ordem.map(s=>'<td class="n">'+cel(porStatus[s],hrsStatus[s])+'</td>').join('')+
     '<td class="n">'+cel(R.length, somaHoras(R))+'</td><td class="n">100,0%</td></tr>';
 
-  return '<table class="rel-st"><thead>'+cab+'</thead><tbody>'+linhas+'</tbody><tfoot>'+rodapeTab+'</tfoot></table>';
+  /* de 7 tipos de ocorrência para cima a tabela só fecha no A4 com a fonte menor */
+  return '<table class="rel-st'+(ordem.length>=7?' compacta':'')+'"><thead>'+cab+'</thead><tbody>'+
+    linhas+'</tbody><tfoot>'+rodapeTab+'</tfoot></table>';
 }
 
 function montarRelatorio(){
   if(!D) return;
   const R = filtrar();
+  orientacaoImpressao(false);
   const ms = mesesSelecionados();
   const stF = setoresDoFiltro();
   const hrs = R.reduce((s,r)=>s+hDe(r),0);
@@ -1862,6 +1896,7 @@ function enviarZap(txt){
 /* relatório A4 de um dia específico */
 function montarRelatorioDia(iso){
   const doDia = registrosDoDia(iso);
+  orientacaoImpressao(false);
   const noDia = D.registros.filter(r=>r.data===iso).length;
   const d = new Date(iso+'T12:00:00');
   const diaLongo = d.toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
@@ -1914,6 +1949,7 @@ function montarRelatorioDia(iso){
    Serve para circular fora do DP (mural, produção, diretoria) sem expor ninguém. */
 function montarRelatorioSetorDia(iso){
   const doDia = registrosDoDia(iso);
+  orientacaoImpressao(false);
   const noDia = D.registros.filter(r=>r.data===iso).length;
   const d = new Date(iso+'T12:00:00');
   const diaLongo = d.toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
@@ -1963,6 +1999,56 @@ function montarRelatorioSetorDia(iso){
           : 'Nenhuma ocorrência registrada nesta data.')+'</div>')+
     '<div class="rel-rodape"><b>Documento confidencial — uso interno. Não divulgar.</b><br>'+
       'Sem identificação de colaboradores — apenas quantidades por setor.<br>'+
+      'Patrimar Móveis Ltda · Controle de Faltas e Ausências · '+esc($('topoArq').textContent)+'</div>');
+}
+
+/* Relatório A4 do quadro "Por setor e tipo de ocorrência" do período — o que está
+   na aba Onde, sozinho na folha. Só quantidades e horas, sem nome de ninguém:
+   pode circular fora do DP, igual ao do dia por setor. */
+function montarRelatorioSetorPeriodo(){
+  if(!D) return;
+  const R = filtrar();
+  /* a folha deitada é a que segura a tabela larga sem espremer os números */
+  orientacaoImpressao(new Set(R.map(r=>r.status)).size >= 6);
+  const ms = mesesSelecionados();
+  const logo = document.querySelector('.topo .logo-chip img').src;
+
+  const setoresR = new Set(R.map(r=>limparSetor(r.setor)));
+  const hTot = somaHoras(R), hFerias = somaHoras(R.filter(ehFeriasReg));
+  const nProg = R.filter(r=>PROGRAMADO.includes(r.status)).length;
+
+  /* absenteísmo do período, mesma conta do relatório geral */
+  const hrsFalta = R.reduce((s,r)=>s+hDe(r),0);
+  const cargaTot = setoresDoFiltro().reduce((s,st)=>s+cargaPeriodo(st,ms),0);
+  const abs = cargaTot>0 ? hrsFalta/cargaTot : NaN;
+  const absTxt = isFinite(abs)
+    ? ' &nbsp;·&nbsp; Absenteísmo: <b>'+pct(abs)+'</b> (meta 3%) — '+rotAbs(classeAbs(abs))
+    : '';
+
+  const porMotivo={};
+  R.forEach(r=>{ if(r.motivo){ const m=tCase(r.motivo); porMotivo[m]=(porMotivo[m]||0)+1; } });
+  const motivos = Object.keys(porMotivo)
+    .sort((a,b)=>porMotivo[b]-porMotivo[a] || a.localeCompare(b,'pt-BR'))
+    .slice(0,20)
+    .map(m=>esc(m)+' ('+porMotivo[m]+')').join(' · ');
+
+  publicarRelatorio(
+    '<div class="rel-conf">🔒 Confidencial — Uso interno · Departamento Pessoal</div>'+
+    '<div class="rel-cab"><img src="'+logo+'" alt="Patrimar Móveis">'+
+      '<div class="rel-tit"><h1>Ausências por Setor e Tipo</h1>'+
+      '<div class="sub">'+esc(rotuloPeriodo())+' · gerado em '+new Date().toLocaleDateString('pt-BR')+' às '+new Date().toLocaleTimeString('pt-BR').slice(0,5)+'</div></div></div>'+
+    '<div class="rel-meta"><b>Filtros:</b> '+esc(filtrosTexto())+'</div>'+
+    (R.length
+      ? '<div class="rel-meta"><b>'+fmt(R.length)+' lançamento'+(R.length===1?'':'s')+'</b> em '+setoresR.size+
+          ' setor'+(setoresR.size===1?'':'es')+' · <b>'+fmt(R.length-nProg)+'</b> exigiram ação · <b>'+fmt(nProg)+
+          '</b> programado (férias e banco de horas) · <b>'+hTxt(hTot)+'</b> de ausência (falta '+
+          hTxt(hTot-hFerias)+' · férias '+hTxt(hFerias)+')'+absTxt+'</div>'+
+        '<div class="rel-sec"><h2>Quantidade e horas por setor e tipo de ocorrência</h2>'+
+          tabelaSetorTipo(R,'Total do período','% do período')+'</div>'+
+        (motivos ? '<div class="rel-sec"><h2>Motivos informados no período</h2><div class="obs">'+motivos+'</div></div>' : '')
+      : '<div class="rel-meta">Nenhum lançamento no período filtrado.</div>')+
+    '<div class="rel-rodape"><b>Documento confidencial — uso interno. Não divulgar.</b><br>'+
+      'Sem identificação de colaboradores — apenas quantidades e horas por setor.<br>'+
       'Patrimar Móveis Ltda · Controle de Faltas e Ausências · '+esc($('topoArq').textContent)+'</div>');
 }
 
@@ -2022,20 +2108,22 @@ $('mdCopiar').addEventListener('click', ()=>{
     setTimeout(()=>{ $('mdCopiar').textContent='Copiar texto'; }, 1600);
   });
 });
-let imprimindoDia = false;
+/* trava: um relatório avulso (do dia, do dia por setor, do período por setor) já
+   está montado — o beforeprint não pode trocá-lo pelo relatório geral */
+let relatorioAvulso = false;
 $('mdPrint').addEventListener('click', ()=>{
   if(!$('mdData').value) return;
-  imprimindoDia = true;
+  relatorioAvulso = true;
   montarRelatorioDia($('mdData').value);
   window.print();
 });
 $('mdPrintSetor').addEventListener('click', ()=>{
   if(!$('mdData').value) return;
-  imprimindoDia = true;
+  relatorioAvulso = true;
   montarRelatorioSetorDia($('mdData').value);
   window.print();
 });
-window.addEventListener('afterprint', ()=>{ imprimindoDia=false; });
+window.addEventListener('afterprint', ()=>{ relatorioAvulso=false; });
 
 /* ================= NAVEGAÇÃO POR SEÇÕES ================= */
 /* a rolagem é a âncora nativa do navegador (scroll-behavior + scroll-padding no CSS);
@@ -2106,8 +2194,14 @@ function iniciar(){
     });
     $('btnImprimirSetor').addEventListener('click', ()=>{
       if(!diaCardHoje) return;
-      imprimindoDia = true;
+      relatorioAvulso = true;
       montarRelatorioSetorDia(diaCardHoje);
+      window.print();
+    });
+    /* o mesmo quadro do período, sozinho na folha */
+    $('btnImprimirPeriodo').addEventListener('click', ()=>{
+      relatorioAvulso = true;
+      montarRelatorioSetorPeriodo();
       window.print();
     });
 
@@ -2120,7 +2214,7 @@ function iniciar(){
     $('btnCsv').addEventListener('click', exportarCsv);
     $('btnImprimir').addEventListener('click', ()=>{ montarRelatorio(); window.print(); });
     /* Ctrl+P imprime o período — a menos que o relatório do dia esteja ativo */
-    window.addEventListener('beforeprint', ()=>{ if(!imprimindoDia) montarRelatorio(); });
+    window.addEventListener('beforeprint', ()=>{ if(!relatorioAvulso) montarRelatorio(); });
 
     document.querySelectorAll('section[id]').forEach(s=>spy.observe(s));
   }
