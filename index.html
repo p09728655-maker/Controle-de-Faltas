@@ -956,9 +956,9 @@ function filtrosTexto(){
   const partes=[];
   const ms = mesesSelecionados();
   partes.push(ms.length===1?MESES_LONGO[ms[0]-1]:ms.length===mesesComDados.length?'Todos os meses':MESES_LONGO[ms[0]-1]+' a '+MESES_LONGO[ms[ms.length-1]-1]);
-  if($('fDepto').value) partes.push($('fDepto').value);
-  if($('fSetor').value) partes.push($('fSetor').value);
-  if($('fStatus').value) partes.push($('fStatus').value);
+  if($('fDepto').value) partes.push(limparSetor($('fDepto').value));
+  if($('fSetor').value) partes.push(limparSetor($('fSetor').value));
+  if($('fStatus').value) partes.push(tCase($('fStatus').value));
   if($('fBusca').value.trim()) partes.push('busca "'+$('fBusca').value.trim()+'"');
   return partes.join(' · ');
 }
@@ -971,9 +971,9 @@ function filtroDiaAtivo(){
 }
 function filtroDiaTexto(){
   const partes=[];
-  if($('fDepto').value) partes.push($('fDepto').value);
-  if($('fSetor').value) partes.push($('fSetor').value);
-  if($('fStatus').value) partes.push($('fStatus').value);
+  if($('fDepto').value) partes.push(limparSetor($('fDepto').value));
+  if($('fSetor').value) partes.push(limparSetor($('fSetor').value));
+  if($('fStatus').value) partes.push(tCase($('fStatus').value));
   if($('fBusca').value.trim()) partes.push('busca "'+$('fBusca').value.trim()+'"');
   return partes.join(' · ');
 }
@@ -991,8 +991,8 @@ function passaEscopo(r){
 }
 function escopoTexto(){
   const partes=[];
-  if($('fDepto').value) partes.push($('fDepto').value);
-  if($('fSetor').value) partes.push($('fSetor').value);
+  if($('fDepto').value) partes.push(limparSetor($('fDepto').value));
+  if($('fSetor').value) partes.push(limparSetor($('fSetor').value));
   return partes.join(' · ');
 }
 /* absenteísmo de um mês dentro do escopo filtrado — usado nos textos e nos PDFs do dia */
@@ -1010,13 +1010,18 @@ function limparFiltrosDia(){
 }
 
 function montarFiltros(){
-  setores = [...new Set(D.registros.map(r=>r.setor))].sort();
-  deptos = [...new Set(D.registros.map(r=>r.depto).filter(Boolean))].sort();
+  /* ordena pelo nome que aparece na tela (sem o prefixo), não pelo código da planilha */
+  const porRotulo = (a,b)=>limparSetor(a).localeCompare(limparSetor(b),'pt-BR');
+  setores = [...new Set(D.registros.map(r=>r.setor))].sort(porRotulo);
+  deptos = [...new Set(D.registros.map(r=>r.depto).filter(Boolean))].sort(porRotulo);
   statusL = [...new Set(D.registros.map(r=>r.status))].sort();
   mesesComDados = [...new Set(D.registros.map(mesDe))].sort((a,b)=>a-b);
   $('fMes').innerHTML = '<option value="">Todos</option>' + mesesComDados.map(m=>'<option value="'+m+'">'+MESES_LONGO[m-1]+'</option>').join('');
-  $('fDepto').innerHTML = '<option value="">Todos</option>' + deptos.map(v=>'<option>'+esc(v)+'</option>').join('');
-  $('fSetor').innerHTML = '<option value="">Todos</option>' + setores.map(v=>'<option>'+esc(v)+'</option>').join('');
+  /* o valor da opção continua sendo o nome cru da planilha — é a chave do filtro
+     e da carga horária; o que muda é só o rótulo que aparece na tela */
+  const opc = v=>'<option value="'+esc(v)+'">'+esc(limparSetor(v))+'</option>';
+  $('fDepto').innerHTML = '<option value="">Todos</option>' + deptos.map(opc).join('');
+  $('fSetor').innerHTML = '<option value="">Todos</option>' + setores.map(opc).join('');
   $('fStatus').innerHTML = '<option value="">Todas</option>' + statusL.map(v=>'<option>'+esc(v)+'</option>').join('');
 }
 
@@ -1031,8 +1036,8 @@ function pintarTags(){
     tags.appendChild(t);
   };
   if($('fMes').value) add('Mês: '+MESES_LONGO[parseInt($('fMes').value)-1], ()=>{$('fMes').value='';});
-  if($('fDepto').value) add('Depto: '+$('fDepto').value, ()=>{$('fDepto').value=''; atualizarSetores();});
-  if($('fSetor').value) add('Setor: '+$('fSetor').value, ()=>{$('fSetor').value='';});
+  if($('fDepto').value) add('Depto: '+limparSetor($('fDepto').value), ()=>{$('fDepto').value=''; atualizarSetores();});
+  if($('fSetor').value) add('Setor: '+limparSetor($('fSetor').value), ()=>{$('fSetor').value='';});
   if($('fStatus').value) add('Ocorrência: '+$('fStatus').value, ()=>{$('fStatus').value='';});
   if($('fBusca').value.trim()) add('Busca: '+$('fBusca').value.trim(), ()=>{$('fBusca').value='';});
   if(tags.children.length){
@@ -1053,9 +1058,10 @@ function pintarTags(){
 
 function atualizarSetores(){
   const dep = $('fDepto').value;
-  const lista = dep ? [...new Set(D.registros.filter(r=>r.depto===dep).map(r=>r.setor))].sort() : setores;
+  const lista = dep ? [...new Set(D.registros.filter(r=>r.depto===dep).map(r=>r.setor))]
+                        .sort((a,b)=>limparSetor(a).localeCompare(limparSetor(b),'pt-BR')) : setores;
   const atual = $('fSetor').value;
-  $('fSetor').innerHTML = '<option value="">Todos</option>' + lista.map(v=>'<option>'+esc(v)+'</option>').join('');
+  $('fSetor').innerHTML = '<option value="">Todos</option>' + lista.map(v=>'<option value="'+esc(v)+'">'+esc(limparSetor(v))+'</option>').join('');
   if(lista.includes(atual)) $('fSetor').value=atual;
 }
 
@@ -1096,7 +1102,7 @@ function atualizarLeitura(R, tot){
   R.forEach(r=>{ porSetor[r.setor]=(porSetor[r.setor]||0)+hDe(r); });
   const topSetor=Object.entries(porSetor).sort((a,b)=>b[1]-a[1])[0];
   if(topSetor && topSetor[1]>0 && !$('fSetor').value)
-    F('Setor com mais horas de falta: <b>'+esc(topSetor[0])+'</b> ('+fmt(topSetor[1])+' h)', false,
+    F('Setor com mais horas de falta: <b>'+esc(limparSetor(topSetor[0]))+'</b> ('+fmt(topSetor[1])+' h)', false,
       ()=>{ $('fSetor').value=topSetor[0]; render(); });
 
   /* concentração em poucas pessoas */
@@ -1245,7 +1251,7 @@ function render(){
     $('subSetor').textContent='Top 12 setores por horas de falta no período filtrado. Clique em uma barra para filtrar o setor.';
   }
   grafico('cSetor',{type:'bar',
-    data:{labels:rankSetor.map(([s])=>s),datasets:[{data:valores,backgroundColor:corSetor,borderRadius:5}]},
+    data:{labels:rankSetor.map(([s])=>limparSetor(s)),datasets:[{data:valores,backgroundColor:corSetor,borderRadius:5}]},
     options:{indexAxis:'y',maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>rotuloVal(c.parsed.x)}}},
       scales:{x:{grid:{color:'rgba(43,48,54,.7)'}},y:{grid:{display:false}}},
@@ -1255,19 +1261,19 @@ function render(){
   const cargaSuspeita = comAbs.filter(([,,a])=>isFinite(a)&&a>1).map(([s])=>s);
   if(cargaSuspeita.length){
     nSet.style.display='block';
-    nSet.innerHTML='⚠ Absenteísmo acima de 100% em <b>'+cargaSuspeita.map(esc).join(', ')+
+    nSet.innerHTML='⚠ Absenteísmo acima de 100% em <b>'+cargaSuspeita.map(x=>esc(limparSetor(x))).join(', ')+
       '</b> — as horas de falta superam a carga cadastrada. Confira a carga desse setor na aba <b>HORAS CARGA</b> da planilha.';
   } else if(rankSetor.length && tot.hrs>0 && modoSetor==='horas' && !$('fSetor').value){
     const [s1,v1]=rankSetor[0];
     nSet.style.display='block';
-    nSet.innerHTML='<b>'+esc(s1)+'</b> responde por <b>'+fmt(v1.h/tot.hrs*100,0)+'%</b> das horas de falta do período.';
+    nSet.innerHTML='<b>'+esc(limparSetor(s1))+'</b> responde por <b>'+fmt(v1.h/tot.hrs*100,0)+'%</b> das horas de falta do período.';
   } else nSet.style.display='none';
 
   /* ---- ONDE: resumo por setor (tabela) ---- */
   const linhasSetor = comAbs.filter(([,v])=>v.h>0||v.f>0).sort((a,b)=>b[1].h-a[1].h).map(([s,v,a])=>{
     const c=classeAbs(a);
     const pill = isFinite(a)?'<span class="pill '+(c==='ok'?'pl-green':c==='alerta'?'pl-amber':'pl-red')+'">'+pct(a)+'</span>':'—';
-    return '<tr><td class="forte">'+esc(s)+'</td><td class="n">'+fmt(v.h,1)+'</td><td class="n">'+pill+'</td></tr>';
+    return '<tr><td class="forte">'+esc(limparSetor(s))+'</td><td class="n">'+fmt(v.h,1)+'</td><td class="n">'+pill+'</td></tr>';
   });
   $('tbSetor').innerHTML = linhasSetor.join('') || '<tr><td colspan="3" style="text-align:center;color:var(--ink3)">Sem dados no período filtrado</td></tr>';
 
@@ -1281,7 +1287,7 @@ function render(){
   });
   const topC = Object.values(porColab).sort((a,b)=>b.h-a.h).slice(0,15);
   $('tbTop').innerHTML = topC.length ? topC.map((c,i)=>
-    '<tr><td>'+(i+1)+'</td><td class="forte">'+esc(mascarar(c.nome))+'</td><td>'+esc(c.setor)+'</td><td class="n">'+fmt(c.f,1)+'</td><td class="n">'+fmt(c.h,1)+'</td></tr>').join('')
+    '<tr><td>'+(i+1)+'</td><td class="forte">'+esc(mascarar(c.nome))+'</td><td>'+esc(limparSetor(c.setor))+'</td><td class="n">'+fmt(c.f,1)+'</td><td class="n">'+fmt(c.h,1)+'</td></tr>').join('')
     : '<tr><td colspan="5" style="text-align:center;color:var(--ink3)">Sem faltas no período filtrado</td></tr>';
 
   /* ---- QUEM: afastados ---- */
@@ -1295,7 +1301,7 @@ function render(){
   });
   const topA = Object.values(porAfast).sort((a,b)=>b.d-a.d).slice(0,15);
   $('tbAfast').innerHTML = topA.length ? topA.map((c,i)=>
-    '<tr><td>'+(i+1)+'</td><td class="forte">'+esc(mascarar(c.nome))+'</td><td>'+esc(c.setor)+'</td><td class="n">'+fmt(c.d)+'</td><td>'+esc(c.motivo)+'</td></tr>').join('')
+    '<tr><td>'+(i+1)+'</td><td class="forte">'+esc(mascarar(c.nome))+'</td><td>'+esc(limparSetor(c.setor))+'</td><td class="n">'+fmt(c.d)+'</td><td>'+esc(c.motivo)+'</td></tr>').join('')
     : '<tr><td colspan="5" style="text-align:center;color:var(--ink3)">Sem afastados no período filtrado</td></tr>';
 
   /* ---- POR QUÊ: motivos ---- */
@@ -1505,7 +1511,7 @@ function tabelaDetalhe(R){
   });
   const vis = L.slice(0, limiteTabela);
   $('tbody').innerHTML = vis.map(r=>
-    '<tr><td class="n">'+dataBR(r.data)+'</td><td class="forte">'+esc(mascarar(r.nome))+'</td><td>'+esc(r.setor)+'</td>'+
+    '<tr><td class="n">'+dataBR(r.data)+'</td><td class="forte">'+esc(mascarar(r.nome))+'</td><td>'+esc(limparSetor(r.setor))+'</td>'+
     '<td>'+pillStatus(r.status)+'</td><td>'+esc(r.motivo||'—')+'</td>'+
     '<td class="n">'+(r.faltas?fmt(r.faltas,1):'—')+'</td><td class="n">'+(r.horas?fmt(r.horas,1):'—')+'</td>'+
     '<td class="n">'+(r.ferias?fmt(r.ferias):'—')+'</td><td class="n">'+(r.afast?fmt(r.afast):'—')+'</td></tr>').join('')
@@ -1651,7 +1657,7 @@ function montarRelatorio(){
       (setoresOrd.map(([s,v])=>{
         const cg=cargaPeriodo(s,ms);
         const a=cg>0?v.h/cg:NaN;
-        return '<tr><td>'+esc(s)+'</td><td class="n">'+fmt(v.f,1)+'</td><td class="n">'+fmt(v.h,1)+'</td><td class="n">'+fmt(v.fe)+'</td><td class="n">'+fmt(v.af)+'</td><td class="n'+(isFinite(a)&&a>0.05?' destaque':'')+'">'+pct(a)+'</td></tr>';
+        return '<tr><td>'+esc(limparSetor(s))+'</td><td class="n">'+fmt(v.f,1)+'</td><td class="n">'+fmt(v.h,1)+'</td><td class="n">'+fmt(v.fe)+'</td><td class="n">'+fmt(v.af)+'</td><td class="n'+(isFinite(a)&&a>0.05?' destaque':'')+'">'+pct(a)+'</td></tr>';
       }).join('')||'<tr><td colspan="6">Sem dados</td></tr>')+'</tbody></table></div>'+
     /* mesma tabela do relatório do dia, agora com o período inteiro */
     '<div class="rel-sec"><h2>Quantidade e horas por setor e tipo de ocorrência</h2>'+
@@ -1662,10 +1668,10 @@ function montarRelatorio(){
     '<div class="rel-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
     '<div class="rel-sec"><h2>Maiores ocorrências de falta</h2><div class="obs">Top 15 por horas no período filtrado.</div>'+
       '<table><thead><tr><th>#</th><th>Colaborador</th><th>Setor</th><th class="n">Faltas</th><th class="n">Horas</th></tr></thead><tbody>'+
-      (topC.map((c,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(mascarar(c.nome))+'</td><td>'+esc(c.setor)+'</td><td class="n">'+fmt(c.f,1)+'</td><td class="n">'+fmt(c.h,1)+'</td></tr>').join('')||'<tr><td colspan="5">Sem faltas</td></tr>')+'</tbody></table></div>'+
+      (topC.map((c,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(mascarar(c.nome))+'</td><td>'+esc(limparSetor(c.setor))+'</td><td class="n">'+fmt(c.f,1)+'</td><td class="n">'+fmt(c.h,1)+'</td></tr>').join('')||'<tr><td colspan="5">Sem faltas</td></tr>')+'</tbody></table></div>'+
     '<div class="rel-sec"><h2>Afastados em destaque</h2><div class="obs">Ordenado por dias de afastamento.</div>'+
       '<table><thead><tr><th>#</th><th>Colaborador</th><th>Setor</th><th class="n">Dias</th><th>Motivo</th></tr></thead><tbody>'+
-      (topA.map((c,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(mascarar(c.nome))+'</td><td>'+esc(c.setor)+'</td><td class="n">'+fmt(c.d)+'</td><td>'+esc(c.motivo)+'</td></tr>').join('')||'<tr><td colspan="5">Sem afastados</td></tr>')+'</tbody></table></div>'+
+      (topA.map((c,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(mascarar(c.nome))+'</td><td>'+esc(limparSetor(c.setor))+'</td><td class="n">'+fmt(c.d)+'</td><td>'+esc(c.motivo)+'</td></tr>').join('')||'<tr><td colspan="5">Sem afastados</td></tr>')+'</tbody></table></div>'+
     '</div>'+
     '<div class="rel-rodape"><b>Documento confidencial — uso interno. Não divulgar.</b><br>Patrimar Móveis Ltda · Controle de Faltas e Ausências · '+esc($('topoArq').textContent)+(lgpd?' · nomes ocultos (LGPD)':'')+'</div>');
 }

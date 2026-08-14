@@ -37,6 +37,12 @@ O resumo por setor ficou compacto e ganhou uma versão **do período**, na tela 
 - O relatório do dia por setor passou a usar a mesma tabela: quantidade e horas dividem a célula, em vez de duas colunas por tipo de ocorrência. Assim cabe no A4 mesmo quando o mês traz Falta, Atestado, Atraso, Afastado, Just., Banco H. e Férias ao mesmo tempo
 - Nome de setor só quebra no espaço, nunca no meio da palavra, e "12 89,6h" não se parte entre duas linhas
 
+### Setor sem o código da planilha
+
+- O prefixo numérico saiu de **toda a exibição**: `2-EMBALAGEM` vira **Embalagem**, `14-ALMOXARIFADO / ESTOQUE` vira **Almoxarifado / Estoque**. Vale para o gráfico de setores, o "Resumo por setor", a tabela de lançamentos, as listas de colaboradores, os relatórios impressos, as etiquetas de filtro e as duas caixas de seleção (Departamento e Setor)
+- Por baixo, o nome continua **exatamente como está na planilha**: é ele que casa o filtro com a aba HORAS CARGA e é ele que sai no CSV. O que mudou foi só o rótulo na tela
+- As caixas de seleção agora vêm **em ordem alfabética pelo nome que aparece**, e não pelo código — antes a lista começava em 10-Expedição, 11-Faturamento, 12-Linha de Pintura
+
 ### Paginação do relatório impresso
 
 - Antes, cada seção era indivisível: uma tabela que não coubesse no que restava da folha pulava inteira para a próxima e **deixava meia página em branco**. Agora a tabela atravessa a quebra e a folha enche até o fim
