@@ -15,6 +15,29 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.10.0 — 14/08/2026
+
+O filtro do painel agora **vale também para o dia**, e o resumo do dia passou a mostrar **horas**.
+
+### O filtro alcança a aba Hoje, o WhatsApp e a impressão
+
+- Departamento, setor, ocorrência e busca agora cortam **a aba Hoje** junto com o resto do painel. Filtrou `2-PRODUÇÃO`, o resumo do dia por setor, os blocos de quem está ausente, o texto do WhatsApp e os dois relatórios A4 do dia saem só com produção
+- **Mês e período continuam de fora** do dia — o dia já é a data. Filtrar "Julho" não muda o que a aba Hoje mostra de hoje
+- A data mostrada também não muda: o filtro corta o conteúdo, não pula para outro dia
+- Quando há filtro ativo, aparece **uma tarja ao lado do subtítulo** ("filtro: 2-PRODUÇÃO · 5 de 12") — dá para ver de relance que o quadro está parcial
+- Os relatórios impressos ganham a **faixa "Filtro aplicado"** logo abaixo do cabeçalho, e as mensagens de WhatsApp trazem a linha "_Filtro: …_" no topo. Quem recebe sabe que aquilo não é o dia inteiro
+- Se o filtro zerar o dia, o quadro diz quantos lançamentos o dia tem no total e oferece o botão **"limpar filtros"** ali mesmo
+- O modal "📤 Faltas do dia" avisa antes de enviar — "Filtro do painel aplicado: … — 5 de 12 lançamentos do dia" — com o botão **"usar o dia inteiro"** ao lado
+- O **absenteísmo do mês** que fecha as mensagens e os PDFs do dia passou a respeitar o escopo do filtro (departamento e setor), com o escopo escrito ao lado do número: "Absenteísmo de Agosto (2-PRODUÇÃO): 0,68%". Ocorrência e busca ficam de fora dessa conta — cortariam as horas sem mexer na carga horária, e o percentual sairia torto
+
+### Horas no resumo do dia
+
+- Cada célula do **resumo do dia por setor** traz a quantidade em cima e as **horas embaixo** — falta, atestado, afastado, férias, cada tipo com as suas. A tabela não alargou
+- Novo número no topo: **"Horas do dia"**, com a quebra em "falta X · férias Y"
+- Os **blocos por setor** mostram o total de horas no cabeçalho, e cada pessoa ganhou a coluna de horas ao lado da ocorrência
+- Mesma informação nas duas mensagens de WhatsApp e nos dois relatórios A4: o "Ausências do Dia por Setor" ficou com **duas colunas por tipo de ocorrência** (Qt e Horas), e o "Faltas do Dia" ganhou a coluna Horas na lista de cada tipo
+- As horas vêm da planilha como estão: **HORAS FÉRIAS** para férias, **HORAS FALTA** para o resto. É o retrato do dia, e por isso não segue o botão "com/sem afastados" do absenteísmo — afastado no dia continua contando as horas dele
+
 ## v2.9.1 — 13/08/2026
 
 - **Emojis removidos das mensagens do WhatsApp.** O WhatsApp para Windows recebe o texto pelo link e troca cada emoji por um losango de interrogação — a mensagem chegava suja no grupo, e não era a tela de quem enviou: o texto já saía quebrado. Testado com a fonte Noto Color Emoji instalada, e não muda nada, porque o emoji não chega até a fonte. O layout se sustenta em negrito, itálico e nas linhas divisórias, que atravessam íntegros em qualquer aparelho
