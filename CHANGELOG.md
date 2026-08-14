@@ -15,6 +15,15 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.12.1 — 14/08/2026
+
+Ajuste das colunas da tabela impressa, que ficou igual à da tela.
+
+- O **nome do setor não quebra mais em duas linhas**: a coluna ocupa o nome inteiro e os números ficam com o resto. Antes, "Almoxarifado / Estoque" e "Departamento Pessoal" saíam empilhados no papel enquanto sobrava espaço nas colunas de número
+- A **barra de composição entrou no papel**, como na tela: além de mostrar o peso de cada tipo de ocorrência no setor, é ela que fica com a sobra da largura da folha, em vez de espalhar as colunas de número
+- De 7 tipos de ocorrência para cima a barra sai de cena — ali o espaço é dos números, e a tabela já entra em modo compacto
+- Vale para os três relatórios com essa tabela: "Imprimir relatório", "Imprimir este quadro" e o do dia por setor
+
 ## v2.12.0 — 14/08/2026
 
 Impressão só do quadro por setor, coluna de setor ajustada e a tabela larga cabendo no A4.
