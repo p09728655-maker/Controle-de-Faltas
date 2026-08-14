@@ -230,14 +230,19 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 .hj-kpi .r{font-family:'Barlow Condensed',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink3)}
 .hj-kpi .v{font-family:'IBM Plex Mono',monospace;font-size:23px;font-weight:500;line-height:1.15;color:var(--ink)}
 .hj-kpi .s{font-size:11.5px;color:var(--ink3);line-height:1.35;margin-top:1px}
-/* resumo por setor — sem rolagem interna, o dia inteiro de uma vez */
-.hj-res td,.hj-res th{padding:7px 10px}
+/* resumo por setor — sem rolagem interna, o dia inteiro de uma vez.
+   Linha baixa de propósito: com 12 setores, cada pixel a mais vira uma tela a mais. */
+.hj-res td,.hj-res th{padding:4px 10px}
 .hj-res td.z{color:var(--ink3)}
-.hj-res th:last-child,.hj-res td:last-child{width:24%}
+/* as colunas de número ficam juntas, logo depois do setor, e a barra de composição
+   toma a sobra — em tela larga não abre buraco no meio da linha */
+.hj-res th:first-child,.hj-res td:first-child{width:26%}
+.hj-res th.n,.hj-res td.n{width:1%;white-space:nowrap}
+.hj-res th:last-child,.hj-res td:last-child{width:auto;min-width:90px;padding-left:16px}
 .hj-res tfoot td{position:sticky;bottom:0;background:var(--surf2);color:var(--ink);font-weight:600;border-top:1px solid var(--line2);border-bottom:0}
 .hj-res tfoot td.n{text-align:right;font-family:'IBM Plex Mono',monospace}
-/* horas embaixo da quantidade: mesma célula, sem alargar a tabela */
-.hj-res .h{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:400;color:var(--ink3);line-height:1.25;margin-top:1px}
+/* horas ao lado da quantidade: a linha não cresce e a largura que sobrava vira uso */
+.hj-res .h{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:400;color:var(--ink3);margin-left:5px}
 .hj-res tfoot .h{color:var(--ink2)}
 /* aviso de filtro ativo no dia */
 .hj-filtro{display:inline-flex;align-items:center;margin-left:8px;background:rgba(245,166,35,.13);border:1px solid rgba(245,166,35,.4);color:var(--amber);border-radius:12px;padding:1px 9px;font-size:11px;font-weight:600;vertical-align:middle}
@@ -319,7 +324,11 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 #relatorio table{width:100%;border-collapse:collapse;font-size:9pt;table-layout:auto}
 #relatorio th{background:#a8140f;color:#fff;font-weight:700;text-align:left;padding:5px 7px;font-size:8pt;text-transform:uppercase;letter-spacing:.3px;white-space:normal}
 #relatorio td.n,#relatorio th.n{text-align:right}
-#relatorio th.sub{font-size:7pt;letter-spacing:0;padding:2px 7px;border-top:1px solid rgba(255,255,255,.35)}
+#relatorio td .h{color:#777;font-size:8pt}   /* horas ao lado da quantidade, na mesma célula */
+#relatorio tfoot td .h{color:#5c5c5c}
+#relatorio td.n{white-space:nowrap}          /* "12 89,6h" não quebra no meio */
+/* nome do setor quebra só no espaço — nada de "Embalag/em" para caber a coluna */
+#relatorio .rel-st td:first-child,#relatorio .rel-st th:first-child{word-break:normal;overflow-wrap:normal}
 #relatorio td{padding:4px 7px;border-bottom:1px solid #e4e4e4;color:#333;white-space:normal;word-break:break-word;overflow-wrap:anywhere}
 #relatorio tbody tr:nth-child(2n) td{background:#faf7ef}
 #relatorio td.destaque{font-weight:700;color:#a8140f}
@@ -547,6 +556,13 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
       </div>
     </div>
   </div>
+  <div class="card" style="margin-top:12px">
+    <div class="card-cab">
+      <span class="ponto" style="background:var(--violet)"></span><span class="card-tit">Por setor e tipo de ocorrência</span>
+    </div>
+    <div class="card-sub" id="setorTipoSub">—</div>
+    <div id="setorTipoTab"></div>
+  </div>
 </section>
 
 <section id="sec-quem" class="secao">
@@ -638,7 +654,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.10.0';
+const VERSAO = '2.11.0';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -1306,6 +1322,16 @@ function render(){
     nT.innerHTML='<b>'+mesesAltos.map(t=>t.mes).join(', ')+'</b>: turnover acima de 5% — faixa considerada crítica.';
   } else nT.style.display='none';
 
+  /* ---- ONDE: setor × tipo de ocorrência no período (mesma tabela da aba Hoje) ---- */
+  const setoresR = new Set(R.map(r=>limparSetor(r.setor)));
+  const hPer = somaHoras(R), hFerPer = somaHoras(R.filter(ehFeriasReg));
+  $('setorTipoSub').textContent = R.length
+    ? rotuloPeriodo()+' · '+fmt(R.length)+' lançamento'+(R.length===1?'':'s')+' em '+setoresR.size+
+      ' setor'+(setoresR.size===1?'':'es')+' · '+hTxt(hPer)+' de ausência (falta '+hTxt(hPer-hFerPer)+
+      ' · férias '+hTxt(hFerPer)+')'
+    : 'Sem lançamentos no período filtrado.';
+  $('setorTipoTab').innerHTML = tabelaSetorTipoTela(R, 'Total do período');
+
   /* ---- DETALHE: tabela de lançamentos ---- */
   tabelaDetalhe(R);
 
@@ -1318,6 +1344,41 @@ function isoHoje(){
   const d=new Date();
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
+/* Tabela de setor × tipo de ocorrência para a tela: quantidade e horas na mesma
+   célula, total e a barra de composição. Serve o dia (aba Hoje) e o período
+   filtrado (aba Onde) — é a mesma leitura, muda só o recorte de tempo. */
+function tabelaSetorTipoTela(R, rotuloTotal){
+  if(!R.length) return '';
+  const porStatus={}, hrsStatus={}, porSetor={};
+  R.forEach(r=>{
+    porStatus[r.status]=(porStatus[r.status]||0)+1;
+    hrsStatus[r.status]=(hrsStatus[r.status]||0)+horasDe(r);
+    const s=limparSetor(r.setor); (porSetor[s]=porSetor[s]||[]).push(r);
+  });
+  const status = [...ORDEM_STATUS.filter(s=>porStatus[s]),
+                  ...Object.keys(porStatus).filter(s=>!ORDEM_STATUS.includes(s)).sort()];
+  const setoresR = Object.keys(porSetor)
+    .sort((a,b)=>porSetor[b].length-porSetor[a].length || a.localeCompare(b,'pt-BR'));
+
+  const th = status.map(s=>'<th class="n" style="color:'+corStatus(s)+'">'+esc(tCase(s))+'</th>').join('');
+  const barra = c=>'<span class="hj-bar">'+status.filter(s=>c[s])
+    .map(s=>'<i style="flex:'+c[s]+';background:'+corStatus(s)+'"></i>').join('')+'</span>';
+  /* quantidade e horas na mesma linha — cabe na largura que sobra e a tabela fica baixa */
+  const cel = (q,h)=> q ? fmt(q)+(h>0?'<span class="h">'+hTxt(h)+'</span>':'') : '—';
+  const linhas = setoresR.map(s=>{
+    const c={}, hc={};
+    porSetor[s].forEach(r=>{ c[r.status]=(c[r.status]||0)+1; hc[r.status]=(hc[r.status]||0)+horasDe(r); });
+    return '<tr><td class="forte">'+esc(s)+'</td>'+
+      status.map(st=>'<td class="n'+(c[st]?'':' z')+'">'+cel(c[st],hc[st])+'</td>').join('')+
+      '<td class="n forte">'+cel(porSetor[s].length, somaHoras(porSetor[s]))+'</td><td>'+barra(c)+'</td></tr>';
+  }).join('');
+  return '<div class="tab-wrap hj-res" style="max-height:none">'+
+    '<table><thead><tr><th>Setor</th>'+th+'<th class="n">Total</th><th>Composição</th></tr></thead>'+
+    '<tbody>'+linhas+'</tbody>'+
+    '<tfoot><tr><td>'+esc(rotuloTotal)+'</td>'+status.map(s=>'<td class="n">'+cel(porStatus[s],hrsStatus[s])+'</td>').join('')+
+    '<td class="n">'+cel(R.length, somaHoras(R))+'</td><td>'+barra(porStatus)+'</td></tr></tfoot></table></div>';
+}
+
 let diaCardHoje = null;   /* dia exibido na aba Hoje (para o botão Enviar) */
 function renderHoje(){
   const hoje = isoHoje();
@@ -1401,24 +1462,7 @@ function renderHoje(){
         'maior: '+esc(maior)+' ('+porSetor[maior].length+')');
 
   /* ---- resumo por setor: quantos, de que tipo e quantas horas ---- */
-  const th = statusDia.map(s=>'<th class="n" style="color:'+corStatus(s)+'">'+esc(tCase(s))+'</th>').join('');
-  const barra = c=>'<span class="hj-bar">'+statusDia.filter(s=>c[s])
-    .map(s=>'<i style="flex:'+c[s]+';background:'+corStatus(s)+'"></i>').join('')+'</span>';
-  /* quantidade em cima, horas embaixo — a tabela não alarga e o dia fica completo */
-  const cel = (q,h)=> q ? fmt(q)+(h>0?'<span class="h">'+hTxt(h)+'</span>':'') : '—';
-  const linhas = setoresDia.map(s=>{
-    const c={}, hc={};
-    porSetor[s].forEach(r=>{ c[r.status]=(c[r.status]||0)+1; hc[r.status]=(hc[r.status]||0)+horasDe(r); });
-    return '<tr><td class="forte">'+esc(s)+'</td>'+
-      statusDia.map(st=>'<td class="n'+(c[st]?'':' z')+'">'+cel(c[st],hc[st])+'</td>').join('')+
-      '<td class="n forte">'+cel(porSetor[s].length, somaHoras(porSetor[s]))+'</td><td>'+barra(c)+'</td></tr>';
-  }).join('');
-  $('hojeResumo').innerHTML =
-    '<div class="tab-wrap hj-res" style="max-height:none">'+
-    '<table><thead><tr><th>Setor</th>'+th+'<th class="n">Total</th><th>Composição</th></tr></thead>'+
-    '<tbody>'+linhas+'</tbody>'+
-    '<tfoot><tr><td>Total do dia</td>'+statusDia.map(s=>'<td class="n">'+cel(porStatus[s],hrsStatus[s])+'</td>').join('')+
-    '<td class="n">'+cel(doDia.length,hTot)+'</td><td>'+barra(porStatus)+'</td></tr></tfoot></table></div>';
+  $('hojeResumo').innerHTML = tabelaSetorTipoTela(doDia, 'Total do dia');
 
   /* ---- detalhe: um bloco por setor, encaixados em colunas ---- */
   $('hojeSetores').innerHTML = '<div class="hj-grid">'+
@@ -1494,6 +1538,41 @@ function exportarCsv(){
 }
 
 /* ================= RELATÓRIO DE IMPRESSÃO ================= */
+
+/* Tabela "quantidade e horas por setor e tipo de ocorrência" — a mesma nos dois
+   relatórios impressos, o do dia e o do período. Quantidade e horas dividem a
+   célula para caber no A4 mesmo quando o mês traz muitos tipos de ocorrência. */
+function tabelaSetorTipo(R, rotuloTotal, rotuloPct){
+  if(!R.length) return '';
+  const porStatus={}, hrsStatus={}, porSetor={};
+  R.forEach(r=>{
+    porStatus[r.status]=(porStatus[r.status]||0)+1;
+    hrsStatus[r.status]=(hrsStatus[r.status]||0)+horasDe(r);
+    const s=limparSetor(r.setor); (porSetor[s]=porSetor[s]||[]).push(r);
+  });
+  const ordem=[...ORDEM_STATUS.filter(s=>porStatus[s]),
+               ...Object.keys(porStatus).filter(s=>!ORDEM_STATUS.includes(s)).sort()];
+  const setoresR = Object.keys(porSetor)
+    .sort((a,b)=>porSetor[b].length-porSetor[a].length || a.localeCompare(b,'pt-BR'));
+  const cel = (q,h)=> q ? q+(h>0?' <span class="h">'+hTxt(h)+'</span>':'') : '—';
+
+  const cab = '<tr><th>Setor</th>'+ordem.map(s=>'<th class="n">'+esc(tCase(s))+'</th>').join('')+
+              '<th class="n">Total</th><th class="n">'+esc(rotuloPct||'% do total')+'</th></tr>';
+  const linhas = setoresR.map(s=>{
+    const c={}, hc={};
+    porSetor[s].forEach(r=>{ c[r.status]=(c[r.status]||0)+1; hc[r.status]=(hc[r.status]||0)+horasDe(r); });
+    return '<tr><td class="destaque">'+esc(s)+'</td>'+
+      ordem.map(st=>'<td class="n'+(c[st]?'':' z')+'">'+cel(c[st],hc[st])+'</td>').join('')+
+      '<td class="n destaque">'+cel(porSetor[s].length, somaHoras(porSetor[s]))+'</td>'+
+      '<td class="n">'+fmt(porSetor[s].length/R.length*100,1)+'%</td></tr>';
+  }).join('');
+  const rodapeTab = '<tr><td>'+esc(rotuloTotal)+'</td>'+
+    ordem.map(s=>'<td class="n">'+cel(porStatus[s],hrsStatus[s])+'</td>').join('')+
+    '<td class="n">'+cel(R.length, somaHoras(R))+'</td><td class="n">100,0%</td></tr>';
+
+  return '<table class="rel-st"><thead>'+cab+'</thead><tbody>'+linhas+'</tbody><tfoot>'+rodapeTab+'</tfoot></table>';
+}
+
 function montarRelatorio(){
   if(!D) return;
   const R = filtrar();
@@ -1560,6 +1639,12 @@ function montarRelatorio(){
         const a=cg>0?v.h/cg:NaN;
         return '<tr><td>'+esc(s)+'</td><td class="n">'+fmt(v.f,1)+'</td><td class="n">'+fmt(v.h,1)+'</td><td class="n">'+fmt(v.fe)+'</td><td class="n">'+fmt(v.af)+'</td><td class="n'+(isFinite(a)&&a>0.05?' destaque':'')+'">'+pct(a)+'</td></tr>';
       }).join('')||'<tr><td colspan="6">Sem dados</td></tr>')+'</tbody></table></div>'+
+    /* mesma tabela do relatório do dia, agora com o período inteiro */
+    '<div class="rel-sec"><h2>Quantidade e horas por setor e tipo de ocorrência</h2>'+
+      '<div class="obs">'+esc(rotuloPeriodo())+' · lançamentos e horas de ausência de cada setor, por tipo. '+
+      'Horas de férias vêm da coluna HORAS FÉRIAS da planilha; o resto, de HORAS FALTA.</div>'+
+      (tabelaSetorTipo(R,'Total do período','% do período') || '<div class="obs">Sem lançamentos no período filtrado.</div>')+
+    '</div>'+
     '<div class="rel-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
     '<div class="rel-sec"><h2>Maiores ocorrências de falta</h2><div class="obs">Top 15 por horas no período filtrado.</div>'+
       '<table><thead><tr><th>#</th><th>Colaborador</th><th>Setor</th><th class="n">Faltas</th><th class="n">Horas</th></tr></thead><tbody>'+
@@ -1815,39 +1900,17 @@ function montarRelatorioSetorDia(iso){
   const diaLongo = d.toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
   const logo = document.querySelector('.topo .logo-chip img').src;
 
-  const porStatus={}, hrsStatus={}, porSetor={}, porMotivo={};
+  /* a tabela sai por tabelaSetorTipo(); aqui ficam só os números da linha de resumo */
+  const porStatus={}, porSetor={}, porMotivo={};
   doDia.forEach(r=>{
     porStatus[r.status]=(porStatus[r.status]||0)+1;
-    hrsStatus[r.status]=(hrsStatus[r.status]||0)+horasDe(r);
     const s=limparSetor(r.setor); (porSetor[s]=porSetor[s]||[]).push(r);
     if(r.motivo){ const m=tCase(r.motivo); porMotivo[m]=(porMotivo[m]||0)+1; }
   });
-  const ordem=[...ORDEM_STATUS.filter(s=>porStatus[s]),
-               ...Object.keys(porStatus).filter(s=>!ORDEM_STATUS.includes(s)).sort()];
-  const setoresDia = Object.keys(porSetor)
-    .sort((a,b)=>porSetor[b].length-porSetor[a].length || a.localeCompare(b,'pt-BR'));
-  const nProg = ordem.filter(s=>PROGRAMADO.includes(s)).reduce((t,s)=>t+porStatus[s],0);
+  const setoresDia = Object.keys(porSetor);
+  const nProg = Object.keys(porStatus).filter(s=>PROGRAMADO.includes(s)).reduce((t,s)=>t+porStatus[s],0);
   const hTot = somaHoras(doDia);
   const hFerias = somaHoras(doDia.filter(ehFeriasReg));
-
-  /* cada tipo de ocorrência ocupa duas colunas: quantas pessoas e quantas horas */
-  const cab = '<tr><th rowspan="2">Setor</th>'+ordem.map(s=>'<th class="n" colspan="2">'+esc(tCase(s))+'</th>').join('')+
-              '<th class="n" colspan="2">Total</th><th class="n" rowspan="2">% do dia</th></tr>'+
-              '<tr>'+ordem.map(()=>'<th class="n sub">Qt</th><th class="n sub">Horas</th>').join('')+
-              '<th class="n sub">Qt</th><th class="n sub">Horas</th></tr>';
-  const linhas = setoresDia.map(s=>{
-    const c={}, hc={};
-    porSetor[s].forEach(r=>{ c[r.status]=(c[r.status]||0)+1; hc[r.status]=(hc[r.status]||0)+horasDe(r); });
-    return '<tr><td class="destaque">'+esc(s)+'</td>'+
-      ordem.map(st=>'<td class="n'+(c[st]?'':' z')+'">'+(c[st]||'—')+'</td>'+
-                    '<td class="n'+(hc[st]>0?'':' z')+'">'+hTxt(hc[st]||0)+'</td>').join('')+
-      '<td class="n destaque">'+porSetor[s].length+'</td>'+
-      '<td class="n destaque">'+hTxt(somaHoras(porSetor[s]))+'</td>'+
-      '<td class="n">'+fmt(porSetor[s].length/doDia.length*100,1)+'%</td></tr>';
-  }).join('');
-  const rodapeTab = '<tr><td>Total do dia</td>'+
-                    ordem.map(s=>'<td class="n">'+porStatus[s]+'</td><td class="n">'+hTxt(hrsStatus[s]||0)+'</td>').join('')+
-                    '<td class="n">'+doDia.length+'</td><td class="n">'+hTxt(hTot)+'</td><td class="n">100,0%</td></tr>';
 
   const motivos = Object.keys(porMotivo)
     .sort((a,b)=>porMotivo[b]-porMotivo[a] || a.localeCompare(b,'pt-BR'))
@@ -1875,7 +1938,7 @@ function montarRelatorioSetorDia(iso){
           '</b> programado (férias e banco de horas) · <b>'+hTxt(hTot)+'</b> de ausência (falta '+
           hTxt(hTot-hFerias)+' · férias '+hTxt(hFerias)+')'+absMesTxt+'</div>'+
         '<div class="rel-sec"><h2>Quantidade e horas por setor e tipo de ocorrência</h2>'+
-          '<table><thead>'+cab+'</thead><tbody>'+linhas+'</tbody><tfoot>'+rodapeTab+'</tfoot></table></div>'+
+          tabelaSetorTipo(doDia,'Total do dia','% do dia')+'</div>'+
         (motivos ? '<div class="rel-sec"><h2>Motivos informados no dia</h2><div class="obs">'+motivos+'</div></div>' : '')
       : '<div class="rel-meta">'+(noDia && filtroDiaAtivo()
           ? 'Nenhuma ocorrência nesta data dentro do filtro aplicado.'

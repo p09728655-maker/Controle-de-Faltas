@@ -15,6 +15,28 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.11.0 — 14/08/2026
+
+O resumo por setor ficou compacto e ganhou uma versão **do período**, na tela e na impressão.
+
+### Resumo do dia mais baixo
+
+- As horas saíram de baixo da quantidade e foram para o **lado dela**, na mesma linha: com 12 setores a tabela encolheu quase um terço da altura, e a largura que sobrava na tela virou uso
+- As colunas de número agora ficam **juntas, logo depois do setor**, e a barra de composição toma a sobra — em tela larga não abre mais aquele vão no meio da linha
+- Linha mais baixa (menos respiro em cima e embaixo): o dia inteiro cabe sem rolagem
+
+### Novo quadro: "Por setor e tipo de ocorrência" do período
+
+- Fica na aba **Onde**, abaixo dos setores: a mesma tabela da aba Hoje — quantidade e horas de cada tipo de ocorrência, total e a barra de composição —, só que com o **período filtrado** inteiro em vez de um dia
+- O subtítulo traz o recorte: "Em Agosto · 111 lançamentos em 12 setores · 820h de ausência (falta 503,2h · férias 316,8h)"
+- Segue os filtros do painel como o resto da aba, mês inclusive
+
+### A mesma tabela no relatório impresso
+
+- O **"Imprimir relatório"** ganhou a seção "Quantidade e horas por setor e tipo de ocorrência" do período, logo abaixo do resumo por setor
+- O relatório do dia por setor passou a usar a mesma tabela: quantidade e horas dividem a célula, em vez de duas colunas por tipo de ocorrência. Assim cabe no A4 mesmo quando o mês traz Falta, Atestado, Atraso, Afastado, Just., Banco H. e Férias ao mesmo tempo
+- Nome de setor só quebra no espaço, nunca no meio da palavra, e "12 89,6h" não se parte entre duas linhas
+
 ## v2.10.0 — 14/08/2026
 
 O filtro do painel agora **vale também para o dia**, e o resumo do dia passou a mostrar **horas**.
