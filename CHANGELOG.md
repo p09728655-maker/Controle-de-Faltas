@@ -15,6 +15,41 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.11.0 — 14/08/2026
+
+O resumo por setor ficou compacto e ganhou uma versão **do período**, na tela e na impressão.
+
+### Resumo do dia mais baixo
+
+- As horas saíram de baixo da quantidade e foram para o **lado dela**, na mesma linha: com 12 setores a tabela encolheu quase um terço da altura, e a largura que sobrava na tela virou uso
+- As colunas de número agora ficam **juntas, logo depois do setor**, e a barra de composição toma a sobra — em tela larga não abre mais aquele vão no meio da linha
+- Linha mais baixa (menos respiro em cima e embaixo): o dia inteiro cabe sem rolagem
+
+### Novo quadro: "Por setor e tipo de ocorrência" do período
+
+- Fica na aba **Onde**, abaixo dos setores: a mesma tabela da aba Hoje — quantidade e horas de cada tipo de ocorrência, total e a barra de composição —, só que com o **período filtrado** inteiro em vez de um dia
+- O subtítulo traz o recorte: "Em Agosto · 111 lançamentos em 12 setores · 820h de ausência (falta 503,2h · férias 316,8h)"
+- Segue os filtros do painel como o resto da aba, mês inclusive
+
+### A mesma tabela no relatório impresso
+
+- O **"Imprimir relatório"** ganhou a seção "Quantidade e horas por setor e tipo de ocorrência" do período, logo abaixo do resumo por setor
+- O relatório do dia por setor passou a usar a mesma tabela: quantidade e horas dividem a célula, em vez de duas colunas por tipo de ocorrência. Assim cabe no A4 mesmo quando o mês traz Falta, Atestado, Atraso, Afastado, Just., Banco H. e Férias ao mesmo tempo
+- Nome de setor só quebra no espaço, nunca no meio da palavra, e "12 89,6h" não se parte entre duas linhas
+
+### Setor sem o código da planilha
+
+- O prefixo numérico saiu de **toda a exibição**: `2-EMBALAGEM` vira **Embalagem**, `14-ALMOXARIFADO / ESTOQUE` vira **Almoxarifado / Estoque**. Vale para o gráfico de setores, o "Resumo por setor", a tabela de lançamentos, as listas de colaboradores, os relatórios impressos, as etiquetas de filtro e as duas caixas de seleção (Departamento e Setor)
+- Por baixo, o nome continua **exatamente como está na planilha**: é ele que casa o filtro com a aba HORAS CARGA e é ele que sai no CSV. O que mudou foi só o rótulo na tela
+- As caixas de seleção agora vêm **em ordem alfabética pelo nome que aparece**, e não pelo código — antes a lista começava em 10-Expedição, 11-Faturamento, 12-Linha de Pintura
+
+### Paginação do relatório impresso
+
+- Antes, cada seção era indivisível: uma tabela que não coubesse no que restava da folha pulava inteira para a próxima e **deixava meia página em branco**. Agora a tabela atravessa a quebra e a folha enche até o fim
+- O **cabeçalho da tabela se repete** no alto da página seguinte, e nenhuma linha se parte no meio da quebra
+- A margem de baixo passou de 16 mm para 22 mm: a tarja "Confidencial — uso interno" que se repete em toda folha ficava por cima da última linha da página. Agora sobram 5 mm de folga entre a última linha e a tarja
+- Conferido imprimindo de verdade em A4: relatório do dia por setor em 1 página, faltas do dia em 2, período em 3 — sem buraco e sem linha cortada
+
 ## v2.10.0 — 14/08/2026
 
 O filtro do painel agora **vale também para o dia**, e o resumo do dia passou a mostrar **horas**.
