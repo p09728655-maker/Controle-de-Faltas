@@ -37,6 +37,13 @@ O resumo por setor ficou compacto e ganhou uma versão **do período**, na tela 
 - O relatório do dia por setor passou a usar a mesma tabela: quantidade e horas dividem a célula, em vez de duas colunas por tipo de ocorrência. Assim cabe no A4 mesmo quando o mês traz Falta, Atestado, Atraso, Afastado, Just., Banco H. e Férias ao mesmo tempo
 - Nome de setor só quebra no espaço, nunca no meio da palavra, e "12 89,6h" não se parte entre duas linhas
 
+### Paginação do relatório impresso
+
+- Antes, cada seção era indivisível: uma tabela que não coubesse no que restava da folha pulava inteira para a próxima e **deixava meia página em branco**. Agora a tabela atravessa a quebra e a folha enche até o fim
+- O **cabeçalho da tabela se repete** no alto da página seguinte, e nenhuma linha se parte no meio da quebra
+- A margem de baixo passou de 16 mm para 22 mm: a tarja "Confidencial — uso interno" que se repete em toda folha ficava por cima da última linha da página. Agora sobram 5 mm de folga entre a última linha e a tarja
+- Conferido imprimindo de verdade em A4: relatório do dia por setor em 1 página, faltas do dia em 2, período em 3 — sem buraco e sem linha cortada
+
 ## v2.10.0 — 14/08/2026
 
 O filtro do painel agora **vale também para o dia**, e o resumo do dia passou a mostrar **horas**.
