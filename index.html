@@ -234,25 +234,24 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Linha baixa de propósito: com 12 setores, cada pixel a mais vira uma tela a mais. */
 .hj-res td,.hj-res th{padding:4px 10px}
 .hj-res td.z{color:var(--ink3)}
-/* cada coluna ocupa só o que o conteúdo pede e o quadro para onde a tabela termina:
-   a composição é leitura de proporção, não régua — antes ela herdava toda a sobra da
-   largura e virava o elemento mais pesado do resumo */
-.hj-res{width:max-content;max-width:100%}
-.hj-res>table{width:auto}
+/* a sobra da largura vira número maior, não barra maior: o corpo da tabela acompanha
+   a largura da tela (13px num notebook, 20px num monitor grande) e a composição fica
+   numa faixa proporcional. Antes a barra herdava a sobra inteira e virava régua */
+.hj-res>table{font-size:clamp(13px,1.05vw,20px)}
 .hj-res th:first-child,.hj-res td:first-child{white-space:nowrap;padding-right:18px}
 .hj-res th.n,.hj-res td.n{white-space:nowrap}
 .hj-res th:last-child,.hj-res td:last-child{padding-left:16px}
 .hj-res tfoot td{position:sticky;bottom:0;background:var(--surf2);color:var(--ink);font-weight:600;border-top:1px solid var(--line2);border-bottom:0}
 .hj-res tfoot td.n{text-align:right;font-family:'IBM Plex Mono',monospace}
 /* horas ao lado da quantidade: a linha não cresce e a largura que sobrava vira uso */
-.hj-res .h{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:400;color:var(--ink3);margin-left:5px}
+.hj-res .h{font-family:'IBM Plex Mono',monospace;font-size:.78em;font-weight:400;color:var(--ink3);margin-left:5px}
 .hj-res tfoot .h{color:var(--ink2)}
 /* aviso de filtro ativo no dia */
 .hj-filtro{display:inline-flex;align-items:center;margin-left:8px;background:rgba(245,166,35,.13);border:1px solid rgba(245,166,35,.4);color:var(--amber);border-radius:12px;padding:1px 9px;font-size:11px;font-weight:600;vertical-align:middle}
 .hj-limpar{background:rgba(245,166,35,.13);border:1px solid rgba(245,166,35,.4);color:var(--amber);border-radius:12px;padding:2px 10px;font-size:11.5px;font-weight:600;cursor:pointer;margin-left:4px}
 .hj-limpar:hover{background:rgba(245,166,35,.22)}
-/* faixa curta e igual em todas as linhas — é a proporção que se compara, não o comprimento */
-.hj-bar{display:flex;height:8px;border-radius:5px;overflow:hidden;width:190px;background:var(--bg)}
+/* faixa igual em todas as linhas — é a proporção que se compara, não o comprimento */
+.hj-bar{display:flex;height:9px;border-radius:5px;overflow:hidden;width:clamp(150px,17vw,340px);background:var(--bg)}
 .hj-bar i{display:block;height:100%}
 /* colunas em cascata: os blocos se encaixam pela altura, sem buracos entre eles */
 .hj-grid{columns:380px;column-gap:12px}
@@ -353,18 +352,20 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 /* nome do setor quebra só no espaço — nada de "Embalag/em" para caber a coluna —
    e a coluna se ajusta ao nome, em vez de ficar com a sobra da folha inteira */
 #relatorio .rel-st th,#relatorio .rel-st td:first-child{word-break:normal;overflow-wrap:normal}
-/* setor e números ocupam só o que precisam — o nome não quebra em duas linhas — e a
-   tabela para onde o conteúdo termina, em vez de esticar a composição pela folha:
-   na paisagem a barra tomava mais da metade da largura útil */
-#relatorio .rel-st{width:auto}
+/* a largura que sobra na folha vira número maior, não barra maior. Em impressão 1vw é
+   1% da área útil da página, então o corpo da tabela acompanha a folha sozinho: 9pt em
+   pé, ~11,5pt deitada — antes a folha deitada só engordava a barra de composição.
+   O nome do setor não quebra em duas linhas e a composição fica numa faixa proporcional. */
+#relatorio .rel-st{width:100%;font-size:clamp(9pt,1.7vw,11.5pt)}
+#relatorio .rel-st th,#relatorio .rel-st td .h{font-size:.8em}
 #relatorio .rel-st td:first-child,#relatorio .rel-st th:first-child{white-space:nowrap}
 #relatorio .rel-st td.rel-comp,#relatorio .rel-st th:last-child{padding-left:5mm}
-#relatorio .rel-bar{display:flex;height:2.4mm;border-radius:1.2mm;overflow:hidden;width:34mm;background:#eee}
+#relatorio .rel-bar{display:flex;height:clamp(2.4mm,1.1vw,3.2mm);border-radius:1.6mm;overflow:hidden;width:clamp(22mm,12vw,34mm);background:#eee}
 #relatorio .rel-bar i{display:block;height:100%}
-#relatorio .rel-st.compacta{font-size:7.5pt}
-#relatorio .rel-st.compacta th{font-size:7pt;padding:4px 5px}
+/* de 7 tipos de ocorrência para cima o espaço é dos números: corpo menor e sem barra */
+#relatorio .rel-st.compacta{font-size:clamp(7.5pt,1.05vw,9pt)}
+#relatorio .rel-st.compacta th{padding:4px 5px}
 #relatorio .rel-st.compacta td{padding:3px 5px}
-#relatorio .rel-st.compacta td .h{font-size:6.5pt}
 #relatorio td{padding:4px 7px;border-bottom:1px solid #e4e4e4;color:#333;white-space:normal;word-break:break-word;overflow-wrap:anywhere}
 #relatorio tbody tr:nth-child(2n) td{background:#faf7ef}
 #relatorio td.destaque{font-weight:700;color:#a8140f}
@@ -693,7 +694,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.12.2';
+const VERSAO = '2.12.3';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;

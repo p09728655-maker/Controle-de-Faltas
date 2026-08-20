@@ -15,6 +15,15 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.12.3 — 20/08/2026
+
+A largura que sobrou virou número maior — o ajuste que faltava na v2.12.2.
+
+- **O corpo da tabela acompanha a largura disponível.** Na tela vai de 13px num notebook a 20px num monitor grande; no papel, de 9pt na folha em pé a 11,5pt na deitada. A folha deitada era o pior caso: os números saíam do mesmo tamanho da folha em pé e a sobra toda virava barra
+- **A tabela volta a ocupar a linha inteira.** Na v2.12.2 ela encolheu até o fim do conteúdo e deixou um vazio preto ao lado, na tela
+- A **barra de composição** fica numa faixa proporcional à folha (22mm em pé, 34mm deitada) em vez de herdar a sobra
+- Com 7 tipos de ocorrência ou mais a tabela segue em modo compacto, mas agora também ganha corpo na folha deitada (7,5pt → 8,1pt)
+
 ## v2.12.2 — 20/08/2026
 
 A barra de composição deixou de tomar a largura da folha e da tela.
