@@ -15,6 +15,15 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.12.2 — 20/08/2026
+
+A barra de composição deixou de tomar a largura da folha e da tela.
+
+- A barra agora tem **faixa fixa** (190px na tela, 34mm no papel) em vez de herdar toda a sobra da largura. Antes, na folha deitada, ela sozinha ocupava mais da metade da área útil — e na tela, mais de dois terços da tabela
+- **A tabela para onde o conteúdo termina**: cada coluna fica do tamanho do que carrega e o quadro não se estica só para preencher a linha. Os números continuam juntos do nome do setor, sem vão no meio
+- No **celular** a barra cai para 110px, para a tabela rolar menos de lado
+- Vale para a tela (abas Hoje e Onde) e para os três relatórios com essa tabela: "Imprimir relatório", "Imprimir este quadro" e o do dia por setor
+
 ## v2.12.1 — 14/08/2026
 
 Ajuste das colunas da tabela impressa, que ficou igual à da tela.
