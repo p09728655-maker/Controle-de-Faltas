@@ -204,6 +204,7 @@ select option{background:#1f2328;color:#f2f4f5}
 /* ===== TABELAS ===== */
 .tab-cab{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .tab-wrap{overflow:auto;max-height:460px;border:1px solid var(--line);border-radius:8px}
+.tab-obs{font-size:11.5px;color:var(--ink3);margin-top:6px;line-height:1.45}
 table{width:100%;border-collapse:collapse;font-size:13px}
 thead th{position:sticky;top:0;z-index:1;background:var(--surf2);color:var(--ink3);font-family:'Barlow Condensed',sans-serif;font-size:11.5px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap;user-select:none}
 thead th[data-o]{cursor:pointer}
@@ -695,7 +696,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.13.0';
+const VERSAO = '2.13.1';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -1422,11 +1423,14 @@ function tabelaSetorTipoTela(R, rotuloTotal){
       status.map(st=>'<td class="n'+(c[st]?'':' z')+'">'+cel(c[st],hc[st])+'</td>').join('')+
       '<td class="n forte">'+cel(porSetor[s].length, somaHoras(porSetor[s]))+'</td><td>'+barra(c)+'</td></tr>';
   }).join('');
+  const temMeio = R.some(r=>r.parcial);
   return '<div class="tab-wrap hj-res" style="max-height:none">'+
     '<table><thead><tr><th>Setor</th>'+th+'<th class="n">Total</th><th>Composição</th></tr></thead>'+
     '<tbody>'+linhas+'</tbody>'+
     '<tfoot><tr><td>'+esc(rotuloTotal)+'</td>'+status.map(s=>'<td class="n">'+cel(porStatus[s],hrsStatus[s])+'</td>').join('')+
-    '<td class="n">'+cel(R.length, somaHoras(R))+'</td><td>'+barra(porStatus)+'</td></tr></tfoot></table></div>';
+    '<td class="n">'+cel(R.length, somaHoras(R))+'</td><td>'+barra(porStatus)+'</td></tr></tfoot></table></div>'+
+    '<div class="tab-obs">Os números contam <b>pessoas</b>; a hora menor ao lado é o tempo somado de ausência.'+
+    (temMeio?' Quem faltou <b>meio período (½ dia)</b> conta como 1 pessoa, mas entra só com as horas que perdeu.':'')+'</div>';
 }
 
 let diaCardHoje = null;   /* dia exibido na aba Hoje (para o botão Enviar) */
@@ -1648,8 +1652,11 @@ function tabelaSetorTipo(R, rotuloTotal, rotuloPct){
     ordem.map(s=>'<td class="n">'+cel(porStatus[s],hrsStatus[s])+'</td>').join('')+
     '<td class="n">'+cel(R.length, somaHoras(R))+'</td><td class="n">100,0%</td>'+barra(porStatus)+'</tr>';
 
+  const temMeio = R.some(r=>r.parcial);
   return '<table class="rel-st'+(compacta?' compacta':'')+'"><thead>'+cab+'</thead><tbody>'+
-    linhas+'</tbody><tfoot>'+rodapeTab+'</tfoot></table>';
+    linhas+'</tbody><tfoot>'+rodapeTab+'</tfoot></table>'+
+    '<div class="obs">Os números contam pessoas; a hora ao lado é o tempo somado de ausência.'+
+    (temMeio?' Quem faltou meio período (½ dia) conta como 1 pessoa, mas entra só com as horas que perdeu.':'')+'</div>';
 }
 
 function montarRelatorio(){
@@ -1811,7 +1818,8 @@ function textoDia(iso, comNomes){
     '*'+somar(acao)+'* exige'+(somar(acao)>1?'m':'')+' ação · *'+somar(prog)+'* programado\n'+
     'Horas: *'+hTxt(hTot)+'* — falta '+hTxt(hTot-hFerias)+' · férias '+hTxt(hFerias)+'\n'+
     ordem.map(s=>tCase(s)+' *'+porStatus[s].length+'*'+
-      (somaHoras(porStatus[s])>0 ? ' ('+hTxt(somaHoras(porStatus[s]))+')' : '')).join(' · ')+'\n';
+      (somaHoras(porStatus[s])>0 ? ' ('+hTxt(somaHoras(porStatus[s]))+')' : '')).join(' · ')+'\n'+
+    (doDia.some(r=>r.parcial) ? '_Meio período conta como 1 pessoa; o desconto está nas horas._\n' : '');
 
   /* um bloco por tipo de ocorrência, nome e setor na mesma linha para não esticar a leitura */
   const bloco = s=>{
@@ -1879,7 +1887,8 @@ function textoDiaSetor(iso){
     '*'+nAcao+'* exige'+(nAcao>1?'m':'')+' ação · *'+nProg+'* programado\n'+
     'Horas: *'+hTxt(hTot)+'* — falta '+hTxt(hTot-hFerias)+' · férias '+hTxt(hFerias)+'\n'+
     ordem.map(s=>tCase(s)+' *'+porStatus[s]+'*'+
-      (hrsStatus[s]>0 ? ' ('+hTxt(hrsStatus[s])+')' : '')).join(' · ')+'\n';
+      (hrsStatus[s]>0 ? ' ('+hTxt(hrsStatus[s])+')' : '')).join(' · ')+'\n'+
+    (doDia.some(r=>r.parcial) ? '_Meio período conta como 1 pessoa; o desconto está nas horas._\n' : '');
 
   /* uma linha por setor, como a tabela do PDF: setor, total, horas, % do dia e a composição.
      Com um tipo só, a composição cabe na mesma linha — não vale gastar duas. */

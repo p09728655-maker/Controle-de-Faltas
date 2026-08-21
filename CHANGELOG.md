@@ -15,6 +15,15 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.13.1 — 21/08/2026
+
+O quadro por setor agora explica o que os números significam.
+
+- Abaixo da tabela **"Resumo do dia por setor"** (aba Hoje) e do quadro da aba **Onde**, uma linha explica: **os números contam pessoas; a hora menor ao lado é o tempo somado de ausência**
+- Quando o dia/período tem falta de **meio período**, a explicação completa: quem faltou ½ dia **conta como 1 pessoa, mas entra só com as horas que perdeu** — é por isso que um setor pode mostrar 5 pessoas e menos horas do que 5 × 8,8h
+- A mesma observação sai nos **relatórios impressos** que usam esse quadro ("Ausências do Dia por Setor" e "Ausências por Setor e Tipo") e nas mensagens de **WhatsApp** do dia (com e sem nomes)
+- A nota do meio período só aparece quando há registro de ½ dia no recorte — sem parcial, sai só a explicação curta
+
 ## v2.13.0 — 21/08/2026
 
 A falta de meio período agora aparece identificada no painel.
