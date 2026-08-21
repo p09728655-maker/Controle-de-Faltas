@@ -357,6 +357,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 #relatorio th{background:#a8140f;color:#fff;font-weight:700;text-align:left;padding:5px 7px;font-size:8pt;text-transform:uppercase;letter-spacing:.3px;white-space:normal}
 #relatorio td.n,#relatorio th.n{text-align:right}
 #relatorio td .h{color:#777;font-size:8pt}   /* horas ao lado da quantidade, na mesma célula */
+#relatorio .rel-st td .h{display:inline-block;min-width:6.5ch;text-align:left}   /* faixa fixa: o número fica em coluna */
 #relatorio tfoot td .h{color:#5c5c5c}
 #relatorio td.n{white-space:nowrap}          /* "12 89,6h" não quebra no meio */
 /* nome do setor quebra só no espaço — nada de "Embalag/em" para caber a coluna —
@@ -704,7 +705,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.13.3';
+const VERSAO = '2.13.4';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -1640,7 +1641,8 @@ function tabelaSetorTipo(R, rotuloTotal, rotuloPct, unidade){
                ...Object.keys(porStatus).filter(s=>!ORDEM_STATUS.includes(s)).sort()];
   const setoresR = Object.keys(porSetor)
     .sort((a,b)=>porSetor[b].length-porSetor[a].length || a.localeCompare(b,'pt-BR'));
-  const cel = (q,h)=> q ? q+(h>0?' <span class="h">'+hTxt(h)+'</span>':'') : '—';
+  /* a faixa das horas existe sempre, mesmo vazia — mantém os números alinhados em coluna */
+  const cel = (q,h)=> (q?q:'—')+' <span class="h">'+(q&&h>0?hTxt(h):'')+'</span>';
 
   /* de 7 tipos de ocorrência para cima a tabela só fecha no A4 com a fonte menor,
      e aí a barra de composição sai de cena para não roubar espaço dos números */
