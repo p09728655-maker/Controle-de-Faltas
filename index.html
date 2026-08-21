@@ -242,7 +242,9 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 .hj-res>table{font-size:clamp(13px,1.05vw,20px)}
 .hj-res th:first-child,.hj-res td:first-child{white-space:nowrap;padding-right:18px}
 .hj-res th.n,.hj-res td.n{white-space:nowrap}
-.hj-res th:last-child,.hj-res td:last-child{padding-left:16px}
+/* a coluna da composição fica do tamanho da barra (width:1% encolhe até o conteúdo);
+   sem isso ela absorvia a sobra da tela e deixava um bloco preto depois das barras */
+.hj-res th:last-child,.hj-res td:last-child{padding-left:16px;width:1%}
 .hj-res tfoot td{position:sticky;bottom:0;background:var(--surf2);color:var(--ink);font-weight:600;border-top:1px solid var(--line2);border-bottom:0}
 .hj-res tfoot td.n{text-align:right;font-family:'IBM Plex Mono',monospace}
 /* horas ao lado da quantidade: a linha não cresce e a largura que sobrava vira uso */
@@ -696,7 +698,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.13.1';
+const VERSAO = '2.13.2';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;

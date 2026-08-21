@@ -15,6 +15,14 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.13.2 — 21/08/2026
+
+O bloco preto depois das barras de composição sumiu, na tela.
+
+- A coluna **Composição** agora fica exatamente do tamanho da barra. Antes, por ter o conteúdo mais largo da linha, era ela quem absorvia a sobra de um monitor grande — e como a barra tem faixa fixa, a sobra virava um vazio preto à direita das barras
+- A sobra da largura passou a se **espalhar entre as colunas de setor e de números**, que respiram por igual — o quadro continua ocupando a linha inteira, sem buraco concentrado
+- Vale para o quadro do dia (aba **Hoje**) e o do período (aba **Onde**); a impressão não muda, já tinha esse ajuste
+
 ## v2.13.1 — 21/08/2026
 
 O quadro por setor agora explica o que os números significam.
