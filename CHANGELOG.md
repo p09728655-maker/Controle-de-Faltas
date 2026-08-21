@@ -15,6 +15,16 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.13.3 — 21/08/2026
+
+Números do quadro por setor alinhados em coluna e com legenda no cabeçalho.
+
+- **Os números pararam de dançar**: a etiqueta de horas ao lado do número agora ocupa uma faixa fixa, mesmo quando está vazia — o número grande fica sempre na mesma coluna vertical, linha após linha. Antes, "20 176h" e "5 4,9h" empurravam cada número para um lugar
+- **Cada coluna diz o que é**: sob o título (Falta, Atestado, Total…) entrou a legenda pequena "pessoas · horas" — quem nunca viu o painel entende o par de números sem precisar perguntar
+- **Aba Onde corrigida na legenda**: no quadro do período o número conta **lançamentos** (um por pessoa por dia), não pessoas — cabeçalho e observação agora dizem isso; no quadro do dia continua "pessoas"
+- **O recado sob o quadro ficou evidente**: virou uma faixa de aviso com fundo, borda azul e ícone ℹ️ — na tela e nos relatórios impressos que têm esse quadro; no WhatsApp a linha ganhou o ℹ️
+- Os relatórios impressos também ganharam a legenda "pessoas · horas" (ou "lançamentos · horas", no do período) sob os títulos das colunas
+
 ## v2.13.2 — 21/08/2026
 
 O bloco preto depois das barras de composição sumiu, na tela.
