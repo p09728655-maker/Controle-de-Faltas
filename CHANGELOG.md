@@ -15,6 +15,17 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.13.0 — 21/08/2026
+
+A falta de meio período agora aparece identificada no painel.
+
+- O painel passou a ler a **coluna P** da aba BASE: **I** = dia inteiro, **M** = meio período
+- Registros de meio período ganham a etiqueta **"½ dia"** ao lado do tipo de ocorrência na aba **Hoje** e na tabela **Detalhe**
+- O card **Ausentes no dia** mostra quantos lançamentos do dia são de meio período
+- Na mensagem de WhatsApp **"Faltas do dia"** (com nomes), a linha da pessoa sai com _meio período_
+- No relatório impresso **"Faltas do Dia"**, o **½ dia** aparece ao lado das horas
+- **Nada muda nas contas**: as somas já usavam FALTAS UNIT. (0,5) e HORAS FALTA (3:59) da planilha — a novidade é só a identificação visual de quem faltou meio período
+
 ## v2.12.3 — 20/08/2026
 
 A largura que sobrou virou número maior — o ajuste que faltava na v2.12.2.

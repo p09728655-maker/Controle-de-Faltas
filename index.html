@@ -222,6 +222,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 .pl-green{background:rgba(63,185,80,.13);color:var(--green)}
 .pl-amber{background:rgba(245,166,35,.13);color:var(--amber)}
 .pl-gray{background:rgba(154,163,170,.12);color:var(--ink2)}
+.pl-meio{background:rgba(245,166,35,.16);color:var(--amber);cursor:help}
 .mais{text-align:center;padding:12px;color:var(--ink3);font-size:12.5px}
 
 /* ===== ABA HOJE — resumo e blocos por setor ===== */
@@ -694,7 +695,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.12.3';
+const VERSAO = '2.13.0';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -739,6 +740,7 @@ function montarDados(wb){
       depto: String(r['DEPARTAMENTO']||'').trim(),
       status: st,
       motivo: String(r['MOTIVO AUSÊNCIA']||'').trim(),
+      parcial: String(r['P']||'').trim().toUpperCase()==='M',   /* coluna P: I = dia inteiro, M = meio período */
       faltas: +r['FALTAS UNIT.']||0,
       horas: horasNum(r['HORAS FALTA']),
       ferias: +r['FÉRIAS']||0,
@@ -937,6 +939,8 @@ const mascarar = nome=>{
 };
 const PILL_STATUS = {'FALTA':'pl-red','ATESTADO':'pl-blue','AFASTADO':'pl-orange','ATRASO':'pl-violet','FÉRIAS':'pl-green','FERIAS':'pl-green','JUST.':'pl-amber','BANCO H.':'pl-gray'};
 const pillStatus = st=>'<span class="pill '+(PILL_STATUS[st]||'pl-gray')+'">'+esc(st)+'</span>';
+/* meio período — coluna P da planilha (I = dia inteiro, M = meio) */
+const tagMeio = r => r.parcial ? ' <span class="pill pl-meio" title="Meio período — coluna P = M na planilha">½ dia</span>' : '';
 const COR_STATUS = {'FALTA':'var(--red)','ATESTADO':'var(--blue)','AFASTADO':'var(--orange)','ATRASO':'var(--violet)',
                     'FÉRIAS':'var(--green)','FERIAS':'var(--green)','JUST.':'var(--amber)','BANCO H.':'var(--ink2)'};
 const corStatus = st=>COR_STATUS[st]||'var(--ink3)';
@@ -1477,6 +1481,7 @@ function renderHoje(){
   const setoresDia = Object.keys(porSetor)
     .sort((a,b)=>porSetor[b].length-porSetor[a].length || a.localeCompare(b,'pt-BR'));
   const pessoas = new Set(doDia.map(r=>r.nome)).size;
+  const nMeio = doDia.filter(r=>r.parcial).length;
   const programado = statusDia.filter(s=>PROGRAMADO.includes(s));
   const acao = statusDia.filter(s=>!PROGRAMADO.includes(s));
   const nProg = programado.reduce((t,s)=>t+porStatus[s],0);
@@ -1499,7 +1504,8 @@ function renderHoje(){
   const nomesDe = L => L.length ? L.map(s=>tCase(s)).join(' · ') : '—';
   $('hojeKpis').innerHTML =
     kpi('var(--amber)','Ausentes no dia', fmt(pessoas),
-        pessoas===doDia.length ? 'pessoas com lançamento no dia' : fmt(doDia.length)+' lançamentos no dia') +
+        (pessoas===doDia.length ? 'pessoas com lançamento no dia' : fmt(doDia.length)+' lançamentos no dia')+
+        (nMeio ? ' · '+fmt(nMeio)+' de meio período' : '')) +
     kpi('var(--red)','Exigem ação', fmt(doDia.length-nProg), nomesDe(acao)) +
     kpi('var(--green)','Programado', fmt(nProg), nomesDe(programado)) +
     kpi('var(--blue)','Horas do dia', hTxt(hTot),
@@ -1522,7 +1528,7 @@ function renderHoje(){
         (hSet>0?' · '+hTxt(hSet):'')+'</span></h3>'+
         '<table><tbody>'+
         lista.map(r=>'<tr><td class="forte">'+esc(tCase(mascarar(r.nome)))+'</td>'+
-          '<td>'+pillStatus(r.status)+'</td><td class="n">'+hTxt(horasDe(r))+'</td>'+
+          '<td>'+pillStatus(r.status)+tagMeio(r)+'</td><td class="n">'+hTxt(horasDe(r))+'</td>'+
           '<td>'+esc(r.motivo?tCase(r.motivo):'—')+'</td></tr>').join('')+
         '</tbody></table></div>';
     }).join('')+'</div>';
@@ -1544,7 +1550,7 @@ function tabelaDetalhe(R){
   const vis = L.slice(0, limiteTabela);
   $('tbody').innerHTML = vis.map(r=>
     '<tr><td class="n">'+dataBR(r.data)+'</td><td class="forte">'+esc(mascarar(r.nome))+'</td><td>'+esc(limparSetor(r.setor))+'</td>'+
-    '<td>'+pillStatus(r.status)+'</td><td>'+esc(r.motivo||'—')+'</td>'+
+    '<td>'+pillStatus(r.status)+tagMeio(r)+'</td><td>'+esc(r.motivo||'—')+'</td>'+
     '<td class="n">'+(r.faltas?fmt(r.faltas,1):'—')+'</td><td class="n">'+(r.horas?fmt(r.horas,1):'—')+'</td>'+
     '<td class="n">'+(r.ferias?fmt(r.ferias):'—')+'</td><td class="n">'+(r.afast?fmt(r.afast):'—')+'</td></tr>').join('')
     || '<tr><td colspan="9" style="text-align:center;color:var(--ink3)">Sem registros no período filtrado</td></tr>';
@@ -1814,7 +1820,8 @@ function textoDia(iso, comNomes){
     porStatus[s].slice().sort(cmpDia).forEach(r=>{
       const motivo = r.motivo && s!=='FÉRIAS' && s!=='FERIAS' ? ' · _'+tCase(r.motivo)+'_' : '';
       const h = horasDe(r)>0 ? ' · '+hTxt(horasDe(r)) : '';
-      b+='• '+tCase(mascararNome(r.nome, comNomes))+' — '+limparSetor(r.setor)+h+motivo+'\n';
+      const meio = r.parcial ? ' · _meio período_' : '';
+      b+='• '+tCase(mascararNome(r.nome, comNomes))+' — '+limparSetor(r.setor)+h+meio+motivo+'\n';
     });
     return b;
   };
@@ -1943,7 +1950,7 @@ function montarRelatorioDia(iso){
     const hs = somaHoras(lista);
     return '<div class="rel-sec"><h2>'+esc(tCase(s))+' <span class="hh">('+lista.length+(hs>0?' · '+hTxt(hs):'')+')</span></h2>'+
       '<table><thead><tr><th>Colaborador</th><th>Setor</th><th>Departamento</th><th class="n">Horas</th><th>Motivo</th></tr></thead><tbody>'+
-      lista.map(r=>'<tr><td>'+esc(tCase(mascararDia(r.nome)))+'</td><td>'+esc(limparSetor(r.setor))+'</td><td>'+esc(r.depto?limparSetor(r.depto):'—')+'</td><td class="n">'+hTxt(horasDe(r))+'</td><td>'+esc(r.motivo?tCase(r.motivo):'—')+'</td></tr>').join('')+
+      lista.map(r=>'<tr><td>'+esc(tCase(mascararDia(r.nome)))+'</td><td>'+esc(limparSetor(r.setor))+'</td><td>'+esc(r.depto?limparSetor(r.depto):'—')+'</td><td class="n">'+hTxt(horasDe(r))+(r.parcial?' <span class="h">½ dia</span>':'')+'</td><td>'+esc(r.motivo?tCase(r.motivo):'—')+'</td></tr>').join('')+
       '</tbody></table></div>';
   }).join('');
 
