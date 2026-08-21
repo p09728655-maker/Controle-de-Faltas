@@ -204,7 +204,9 @@ select option{background:#1f2328;color:#f2f4f5}
 /* ===== TABELAS ===== */
 .tab-cab{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .tab-wrap{overflow:auto;max-height:460px;border:1px solid var(--line);border-radius:8px}
-.tab-obs{font-size:11.5px;color:var(--ink3);margin-top:6px;line-height:1.45}
+.tab-obs{display:flex;gap:8px;align-items:flex-start;margin-top:8px;padding:8px 12px;background:rgba(91,141,239,.08);border:1px solid rgba(91,141,239,.28);border-left:3px solid var(--blue);border-radius:8px;font-size:12.5px;color:var(--ink2);line-height:1.5}
+.tab-obs::before{content:'ℹ️';font-size:13px;line-height:1.5}
+.tab-obs b{color:var(--ink)}
 table{width:100%;border-collapse:collapse;font-size:13px}
 thead th{position:sticky;top:0;z-index:1;background:var(--surf2);color:var(--ink3);font-family:'Barlow Condensed',sans-serif;font-size:11.5px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap;user-select:none}
 thead th[data-o]{cursor:pointer}
@@ -248,7 +250,9 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 .hj-res tfoot td{position:sticky;bottom:0;background:var(--surf2);color:var(--ink);font-weight:600;border-top:1px solid var(--line2);border-bottom:0}
 .hj-res tfoot td.n{text-align:right;font-family:'IBM Plex Mono',monospace}
 /* horas ao lado da quantidade: a linha não cresce e a largura que sobrava vira uso */
-.hj-res .h{font-family:'IBM Plex Mono',monospace;font-size:.78em;font-weight:400;color:var(--ink3);margin-left:5px}
+.hj-res .h{display:inline-block;min-width:6.5ch;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:.78em;font-weight:400;color:var(--ink3);margin-left:5px}
+/* legenda pequena sob o título da coluna: diz o que é o número e o que é a hora */
+.th-sub{display:block;font-size:9.5px;font-weight:600;letter-spacing:.5px;text-transform:none;color:var(--ink3);margin-top:1px}
 .hj-res tfoot .h{color:var(--ink2)}
 /* aviso de filtro ativo no dia */
 .hj-filtro{display:inline-flex;align-items:center;margin-left:8px;background:rgba(245,166,35,.13);border:1px solid rgba(245,166,35,.4);color:var(--amber);border-radius:12px;padding:1px 9px;font-size:11px;font-weight:600;vertical-align:middle}
@@ -347,6 +351,8 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
 .rel-kpis,.rel-leitura,.rel-meta{break-inside:avoid}
 .rel-sec h2 .hh{text-transform:none}   /* 8,8h não vira 8,8H no título da seção */
 .rel-sec .obs{font-size:9pt;color:#666;margin-bottom:6px}
+.rel-sec .obs-nota{background:#eef2f9;border:1px solid #c9d4ea;border-left:3px solid #3a5fa8;border-radius:4px;padding:6px 9px;color:#333;margin:5px 0 0;break-inside:avoid}
+#relatorio th .th-sub{display:block;font-size:6.5pt;font-weight:600;text-transform:none;letter-spacing:.3px;color:rgba(255,255,255,.78)}
 #relatorio table{width:100%;border-collapse:collapse;font-size:9pt;table-layout:auto}
 #relatorio th{background:#a8140f;color:#fff;font-weight:700;text-align:left;padding:5px 7px;font-size:8pt;text-transform:uppercase;letter-spacing:.3px;white-space:normal}
 #relatorio td.n,#relatorio th.n{text-align:right}
@@ -698,7 +704,7 @@ tbody td.n{font-family:'IBM Plex Mono',monospace}
    Ao publicar uma atualização: 1) mude VERSAO aqui, 2) mude CACHE no sw.js,
    3) registre a mudança no CHANGELOG.md. O usuário vê a versão no rodapé
    e recebe o aviso "Nova versão disponível" na próxima visita. */
-const VERSAO = '2.13.2';
+const VERSAO = '2.13.3';
 
 /* ================= LEITURA DA PLANILHA (local, via SheetJS) ================= */
 let D = null;
@@ -1383,7 +1389,7 @@ function render(){
       ' setor'+(setoresR.size===1?'':'es')+' · '+hTxt(hPer)+' de ausência (falta '+hTxt(hPer-hFerPer)+
       ' · férias '+hTxt(hFerPer)+')'
     : 'Sem lançamentos no período filtrado.';
-  $('setorTipoTab').innerHTML = tabelaSetorTipoTela(R, 'Total do período');
+  $('setorTipoTab').innerHTML = tabelaSetorTipoTela(R, 'Total do período', 'lançamentos');
 
   /* ---- DETALHE: tabela de lançamentos ---- */
   tabelaDetalhe(R);
@@ -1400,8 +1406,9 @@ function isoHoje(){
 /* Tabela de setor × tipo de ocorrência para a tela: quantidade e horas na mesma
    célula, total e a barra de composição. Serve o dia (aba Hoje) e o período
    filtrado (aba Onde) — é a mesma leitura, muda só o recorte de tempo. */
-function tabelaSetorTipoTela(R, rotuloTotal){
+function tabelaSetorTipoTela(R, rotuloTotal, unidade){
   if(!R.length) return '';
+  unidade = unidade || 'pessoas';
   const porStatus={}, hrsStatus={}, porSetor={};
   R.forEach(r=>{
     porStatus[r.status]=(porStatus[r.status]||0)+1;
@@ -1413,11 +1420,13 @@ function tabelaSetorTipoTela(R, rotuloTotal){
   const setoresR = Object.keys(porSetor)
     .sort((a,b)=>porSetor[b].length-porSetor[a].length || a.localeCompare(b,'pt-BR'));
 
-  const th = status.map(s=>'<th class="n" style="color:'+corStatus(s)+'">'+esc(tCase(s))+'</th>').join('');
+  const sub = '<span class="th-sub">'+unidade+' · horas</span>';
+  const th = status.map(s=>'<th class="n" style="color:'+corStatus(s)+'">'+esc(tCase(s))+sub+'</th>').join('');
   const barra = c=>'<span class="hj-bar">'+status.filter(s=>c[s])
     .map(s=>'<i style="flex:'+c[s]+';background:'+corStatus(s)+'"></i>').join('')+'</span>';
-  /* quantidade e horas na mesma linha — cabe na largura que sobra e a tabela fica baixa */
-  const cel = (q,h)=> q ? fmt(q)+(h>0?'<span class="h">'+hTxt(h)+'</span>':'') : '—';
+  /* quantidade e horas na mesma linha; a faixa das horas existe sempre, mesmo vazia —
+     é isso que mantém os números alinhados em coluna, linha após linha */
+  const cel = (q,h)=> (q ? fmt(q) : '—')+'<span class="h">'+(q&&h>0?hTxt(h):'')+'</span>';
   const linhas = setoresR.map(s=>{
     const c={}, hc={};
     porSetor[s].forEach(r=>{ c[r.status]=(c[r.status]||0)+1; hc[r.status]=(hc[r.status]||0)+horasDe(r); });
@@ -1427,12 +1436,12 @@ function tabelaSetorTipoTela(R, rotuloTotal){
   }).join('');
   const temMeio = R.some(r=>r.parcial);
   return '<div class="tab-wrap hj-res" style="max-height:none">'+
-    '<table><thead><tr><th>Setor</th>'+th+'<th class="n">Total</th><th>Composição</th></tr></thead>'+
+    '<table><thead><tr><th>Setor</th>'+th+'<th class="n">Total'+sub+'</th><th>Composição</th></tr></thead>'+
     '<tbody>'+linhas+'</tbody>'+
     '<tfoot><tr><td>'+esc(rotuloTotal)+'</td>'+status.map(s=>'<td class="n">'+cel(porStatus[s],hrsStatus[s])+'</td>').join('')+
     '<td class="n">'+cel(R.length, somaHoras(R))+'</td><td>'+barra(porStatus)+'</td></tr></tfoot></table></div>'+
-    '<div class="tab-obs">Os números contam <b>pessoas</b>; a hora menor ao lado é o tempo somado de ausência.'+
-    (temMeio?' Quem faltou <b>meio período (½ dia)</b> conta como 1 pessoa, mas entra só com as horas que perdeu.':'')+'</div>';
+    '<div class="tab-obs">Os números contam <b>'+unidade+'</b>'+(unidade==='pessoas'?'':' — um por pessoa por dia')+'; a hora menor ao lado é o tempo somado de ausência.'+
+    (temMeio?' Quem faltou <b>meio período (½ dia)</b> conta como 1, mas entra só com as horas que perdeu.':'')+'</div>';
 }
 
 let diaCardHoje = null;   /* dia exibido na aba Hoje (para o botão Enviar) */
@@ -1618,8 +1627,9 @@ function publicarRelatorio(html){
 /* Tabela "quantidade e horas por setor e tipo de ocorrência" — a mesma nos dois
    relatórios impressos, o do dia e o do período. Quantidade e horas dividem a
    célula para caber no A4 mesmo quando o mês traz muitos tipos de ocorrência. */
-function tabelaSetorTipo(R, rotuloTotal, rotuloPct){
+function tabelaSetorTipo(R, rotuloTotal, rotuloPct, unidade){
   if(!R.length) return '';
+  unidade = unidade || 'pessoas';
   const porStatus={}, hrsStatus={}, porSetor={};
   R.forEach(r=>{
     porStatus[r.status]=(porStatus[r.status]||0)+1;
@@ -1639,8 +1649,9 @@ function tabelaSetorTipo(R, rotuloTotal, rotuloPct){
     ordem.filter(st=>c[st]).map(st=>'<i style="flex:'+c[st]+';background:'+corStatus(st)+'"></i>').join('')+
     '</span></td>' : '';
 
-  const cab = '<tr><th>Setor</th>'+ordem.map(s=>'<th class="n">'+esc(tCase(s))+'</th>').join('')+
-              '<th class="n">Total</th><th class="n">'+esc(rotuloPct||'% do total')+'</th>'+
+  const subTh = '<span class="th-sub">'+unidade+' · horas</span>';
+  const cab = '<tr><th>Setor</th>'+ordem.map(s=>'<th class="n">'+esc(tCase(s))+subTh+'</th>').join('')+
+              '<th class="n">Total'+subTh+'</th><th class="n">'+esc(rotuloPct||'% do total')+'</th>'+
               (compacta?'':'<th>Composição</th>')+'</tr>';
   const linhas = setoresR.map(s=>{
     const c={}, hc={};
@@ -1657,8 +1668,8 @@ function tabelaSetorTipo(R, rotuloTotal, rotuloPct){
   const temMeio = R.some(r=>r.parcial);
   return '<table class="rel-st'+(compacta?' compacta':'')+'"><thead>'+cab+'</thead><tbody>'+
     linhas+'</tbody><tfoot>'+rodapeTab+'</tfoot></table>'+
-    '<div class="obs">Os números contam pessoas; a hora ao lado é o tempo somado de ausência.'+
-    (temMeio?' Quem faltou meio período (½ dia) conta como 1 pessoa, mas entra só com as horas que perdeu.':'')+'</div>';
+    '<div class="obs obs-nota">ℹ️ Os números contam <b>'+unidade+'</b>'+(unidade==='pessoas'?'':' — um por pessoa por dia')+'; a hora ao lado é o tempo somado de ausência.'+
+    (temMeio?' Quem faltou <b>meio período (½ dia)</b> conta como 1, mas entra só com as horas que perdeu.':'')+'</div>';
 }
 
 function montarRelatorio(){
@@ -1821,7 +1832,7 @@ function textoDia(iso, comNomes){
     'Horas: *'+hTxt(hTot)+'* — falta '+hTxt(hTot-hFerias)+' · férias '+hTxt(hFerias)+'\n'+
     ordem.map(s=>tCase(s)+' *'+porStatus[s].length+'*'+
       (somaHoras(porStatus[s])>0 ? ' ('+hTxt(somaHoras(porStatus[s]))+')' : '')).join(' · ')+'\n'+
-    (doDia.some(r=>r.parcial) ? '_Meio período conta como 1 pessoa; o desconto está nas horas._\n' : '');
+    (doDia.some(r=>r.parcial) ? 'ℹ️ _Meio período conta como 1 pessoa; o desconto está nas horas._\n' : '');
 
   /* um bloco por tipo de ocorrência, nome e setor na mesma linha para não esticar a leitura */
   const bloco = s=>{
@@ -1890,7 +1901,7 @@ function textoDiaSetor(iso){
     'Horas: *'+hTxt(hTot)+'* — falta '+hTxt(hTot-hFerias)+' · férias '+hTxt(hFerias)+'\n'+
     ordem.map(s=>tCase(s)+' *'+porStatus[s]+'*'+
       (hrsStatus[s]>0 ? ' ('+hTxt(hrsStatus[s])+')' : '')).join(' · ')+'\n'+
-    (doDia.some(r=>r.parcial) ? '_Meio período conta como 1 pessoa; o desconto está nas horas._\n' : '');
+    (doDia.some(r=>r.parcial) ? 'ℹ️ _Meio período conta como 1 pessoa; o desconto está nas horas._\n' : '');
 
   /* uma linha por setor, como a tabela do PDF: setor, total, horas, % do dia e a composição.
      Com um tipo só, a composição cabe na mesma linha — não vale gastar duas. */
@@ -2081,7 +2092,7 @@ function montarRelatorioSetorPeriodo(){
           '</b> programado (férias e banco de horas) · <b>'+hTxt(hTot)+'</b> de ausência (falta '+
           hTxt(hTot-hFerias)+' · férias '+hTxt(hFerias)+')'+absTxt+'</div>'+
         '<div class="rel-sec"><h2>Quantidade e horas por setor e tipo de ocorrência</h2>'+
-          tabelaSetorTipo(R,'Total do período','% do período')+'</div>'+
+          tabelaSetorTipo(R,'Total do período','% do período','lançamentos')+'</div>'+
         (motivos ? '<div class="rel-sec"><h2>Motivos informados no período</h2><div class="obs">'+motivos+'</div></div>' : '')
       : '<div class="rel-meta">Nenhum lançamento no período filtrado.</div>')+
     '<div class="rel-rodape"><b>Documento confidencial — uso interno. Não divulgar.</b><br>'+
