@@ -15,6 +15,12 @@ Regra prática para o número: **corrigiu algo** → muda o último dígito (2.0
 
 ---
 
+## v2.13.4 — 21/08/2026
+
+O alinhamento dos números chegou ao papel.
+
+- Nos relatórios impressos com o quadro por setor ("Ausências do Dia por Setor" e "Ausências por Setor e Tipo"), a etiqueta de horas agora ocupa **faixa fixa mesmo vazia** — o número de pessoas/lançamentos fica na mesma coluna vertical em todas as linhas, como já estava na tela desde a v2.13.3
+
 ## v2.13.3 — 21/08/2026
 
 Números do quadro por setor alinhados em coluna e com legenda no cabeçalho.
